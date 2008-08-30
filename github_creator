@@ -79,6 +79,11 @@ Do everything but don't actually create the Githun repo.
 
 =cut
 
+=head1 ISSUES
+
+The Github webserver seems to not return the right page every so
+often, so things might go wrong. Try again a couple times.
+
 =head1 SOURCE AVAILABILITY
 
 This source is part of a Github project:
@@ -185,6 +190,7 @@ $mech->get( "https://github.com/login" );
 
 die "Couldn't recognize login page!\n" unless
 	$mech->content =~ qr/Login/;
+DEBUG( "Got to GitHub" );
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Log in
@@ -207,6 +213,7 @@ die "Couldn't recognize creation form!\n" unless
 	$mech->content =~ qr/Create a New Repository/;
 
 die "Exiting since you are debugging\n" if $Config{debug};
+DEBUG( "Logged in" );
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Create the repository
@@ -224,5 +231,8 @@ $mech->submit_form(
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Grab the URLs
 my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
+DEBUG( "Private URL is [$private]" );
+die "No private URL! Might be GitHub's fault\n" unless defined $private;
+
 system( "git remote add $Config{remote_name} $private" );
 system( "git push $Config{remote_name} master" );
