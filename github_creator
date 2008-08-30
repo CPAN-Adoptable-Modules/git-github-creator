@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use vars qw($VERSION);
 
-$VERSION = 0.10;
+$VERSION = 0.11;
 
 =head1 NAME
 
@@ -31,7 +31,10 @@ From META.yml it gets the module name and abstract, which it uses
 for the Github project name and description. 
 
 Once it creates the remote repo, it adds a git remote named "origin"
-(unless you change that in the config).
+(unless you change that in the config), then pushes master to it.
+
+If Github send back the right page, the script ends by printing
+the private git URL.
 
 =head1 CONFIGURATION
 
@@ -41,10 +44,12 @@ directory (using the first one it finds).
 
 Example:
 
-[github]
-login_page="https://github.com/login"
-account=joe@example.com
-pasword=foobar
+	[github]
+	login_page="https://github.com/login"
+	account=joe@example.com
+	pasword=foobar
+	remote_name=github
+	debug=1
 
 =head2 Section [git]
 
@@ -52,7 +57,8 @@ pasword=foobar
 
 =item login_page (default = https://github.com/login)
 
-This shouldn't change. 
+This shouldn't change, but what the hell. It's the only URL
+you need to know.
 
 =item account (default = GITHUB_USER environment var)
 
@@ -129,21 +135,24 @@ foreach my $dir ( ".", $ENV{HOME} )
 
 die "Could not read config file!\n" unless defined $ini;
 
-my %Defaults = {
+my %Defaults = (
 	login_page  => "https://github.com/login",
-	account     => $ENV{GITHUB_USER},
-	password    => $ENV{GITHUB_PASS},
+	account     => $ENV{GITHUB_USER} || '',
+	password    => $ENV{GITHUB_PASS} || '',
 	remote_name => 'origin',
-	};
+	debug       => 0,
+	);
 	
 foreach my $key ( keys %Defaults )
 	{
 	$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};	
+	DEBUG( "$key is $Config{$key}" );
 	}
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # Get module info from META.yml
+system( "$^X Makefile.PL" ) unless -e "Makefile";
 system( "make metafile" ) unless -e 'META.yml';
 
 my( $wanted, $reporter ) = find_by_name( "META.yml" );
@@ -186,14 +195,14 @@ $mech->submit_form(
 	);
 
 die "Couldn't recognize 'create a new one' link!\n" unless 
-	$mech->content =~ qr/Create a new one/;
+	$mech->content =~ qr/create a new one/;
 
 $mech->follow_link( text => '(create a new one)' );
 
 die "Couldn't recognize creation form!\n" unless 
 	$mech->content =~ qr/Create a New Repository/;
 
-exit if $Config{debug};
+die "Exiting since you are debugging\n" if $Config{debug};
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # Create the repository

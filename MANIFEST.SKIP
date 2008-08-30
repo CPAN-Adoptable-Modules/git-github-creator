@@ -19,3 +19,6 @@ t/cover_db*
 ^cover_db\b
 \.gitignore
 \.svnignore
+.git
+\.old$
+github_creator-
