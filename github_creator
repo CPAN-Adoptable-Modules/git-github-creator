@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
 $VERSION = 0.11;
@@ -102,24 +103,28 @@ You may redistribute this under the same terms as Perl itself.
 
 =cut
 
-BEGIN {
-	chomp( my @remotes = `git remote` );
-	my %remotes = map { $_, 1 } @remotes;
-	print "Remotes are [@remotes]\n";
-	die "github remote already exists! Exiting\n"
-		if exists $remotes{'github'};
-	}
-
-use Config::IniFiles;
-use File::Basename;
-use File::Find;
-use File::Find::Closures qw(find_by_name);
-use File::Spec::Functions qw(catfile);
 use Log::Log4perl qw(:easy);
-use WWW::Mechanize;
-use YAML;
-
 Log::Log4perl->easy_init( $DEBUG );
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Should we run?
+{
+chomp( my @remotes = `git remote` );
+my %remotes = map { $_, 1 } @remotes;
+DEBUG( "Remotes are [@remotes]\n" );
+die "github remote already exists! Exiting\n"
+	if exists $remotes{'github'};
+}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Okay, we should run, so pull in the modules
+require Config::IniFiles;
+require File::Basename;
+require File::Find;
+require File::Find::Closures; File::Find::Closures->import( qw(find_by_name) );
+require File::Spec::Functions; File::Spec::Functions->import( qw(catfile) );
+require WWW::Mechanize;
+require YAML;
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Read config
