@@ -1,0 +1,214 @@
+#!/usr/local/bin/perl
+
+eval 'exec /usr/local/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+use strict;
+use warnings;
+use vars qw($VERSION);
+
+$VERSION = 0.10;
+
+=head1 NAME
+
+git_creator - Create a Github repository for your Perl module
+
+=head1 SYNOPSIS
+
+#edit ~/.github_creator.ini
+
+#Inside a git repo
+% github_creator
+
+=head1 DESCRIPTION
+
+This is a short script you can run from within an existing git
+repository to create a remote repo on Github using a previously
+created account. This does not create Github accounts (and that
+violates the terms of service).
+
+It takes its information from META.yml. If the script doesn't 
+find a META.yml, it tries to run `make metafile` to create one. Sorry,
+no Module::Build support just yet only because I don't need it yet.
+
+From META.yml it gets the module name and abstract, which it uses 
+for the Github project name and description. 
+
+Once it creates the remote repo, it adds a git remote named "origin"
+(unless you change that in the config).
+
+=head1 CONFIGURATION
+
+The configuration file is an INI file named F<.github_creator.ini>
+which the script looks for in the current directory or your home
+directory (using the first one it finds).
+
+Example:
+
+[github]
+login_page="https://github.com/login"
+account=joe@example.com
+pasword=foobar
+
+=head2 Section [git]
+
+=over 4
+
+=item login_page (default = https://github.com/login)
+
+This shouldn't change. 
+
+=item account (default = GITHUB_USER environment var)
+
+Your account name, which is probably your email address.
+
+=item password (default = GITHUB_PASS environment var)
+
+=item remote_name (default = origin)
+
+I like to use "github" though.
+
+=back
+
+=cut
+
+=head1 SOURCE AVAILABILITY
+
+This source is part of a Github project:
+
+	http://sourceforge.net/projects/brian-d-foy/
+
+=head1 AUTHOR
+
+brian d foy, C<< <bdfoy@cpan.org> >>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008, brian d foy, All Rights Reserved.
+
+You may redistribute this under the same terms as Perl itself.
+
+=cut
+
+BEGIN {
+	chomp( my @remotes = `git remote` );
+	my %remotes = map { $_, 1 } @remotes;
+	print "Remotes are [@remotes]\n";
+	die "github remote already exists! Exiting\n"
+		if exists $remotes{'github'};
+	}
+
+use Config::IniFiles;	
+use File::Find;
+use File::Find::Closures qw(find_by_name);
+use File::Spec::Functions qw(catfile);
+use Log::Log4perl qw(:easy);
+use WWW::Mechanize;
+use YAML;
+
+Log::Log4perl->easy_init( $INFO );
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Read config
+my %Config = ();
+
+{
+my $Section = 'github';
+my $ini;
+
+foreach my $dir ( ".", $ENV{HOME} )
+	{
+	my $file = catfile( $dir, ".$0.ini" );
+	DEBUG( "Trying config file [$file]" );
+	next unless -e $file;
+
+	$ini = Config::IniFiles->new( -file => $file );
+
+	last;
+	}
+
+die "Could not read config file!\n" unless defined $ini;
+
+my %Defaults = {
+	login_page  => "https://github.com/login",
+	account     => $ENV{GITHUB_USER},
+	password    => $ENV{GITHUB_PASS},
+	remote_name => 'origin',
+	};
+	
+foreach my $key ( keys %Defaults )
+	{
+	$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};	
+	}
+}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Get module info from META.yml
+system( "make metafile" ) unless -e 'META.yml';
+
+my( $wanted, $reporter ) = find_by_name( "META.yml" );
+find( $wanted, "." );
+my @metas = $reporter->();
+die "Found more than one META.yml!\n" if @metas > 1;
+DEBUG( "META.yml is at $metas[0]" );
+
+my $meta = YAML::LoadFile( $metas[0] );
+
+my $name     = $meta->{name};
+my $abstract = "(Perl) " . $meta->{abstract};
+
+DEBUG( "Project is [$name]" );
+DEBUG( "Project description is [$abstract]" );
+
+my $homepage = "http://search.cpan.org/dist/$name";
+DEBUG( "Project homepage is [$homepage]" );
+	
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Get to Github
+my $mech = WWW::Mechanize->new;
+$mech->agent_alias( 'Mac Safari' );
+
+$mech->get( "https://github.com/login" );
+
+die "Couldn't recognize login page!\n" unless 
+	$mech->content =~ qr/Login/;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Log in
+$mech->submit_form(
+	form_number => 1,
+	fields      => {
+		login       => $Config{account},
+		password    => $Config{password},
+		remember_me => 1,
+		commit      => 'Log in',
+	}
+	);
+
+die "Couldn't recognize 'create a new one' link!\n" unless 
+	$mech->content =~ qr/Create a new one/;
+
+$mech->follow_link( text => '(create a new one)' );
+
+die "Couldn't recognize creation form!\n" unless 
+	$mech->content =~ qr/Create a New Repository/;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Create the repository
+$mech->submit_form(
+	form_number => 2,
+	fields      => {
+		'repository[name]'         => $name,
+		'repository[description]'  => $abstract,
+		'repository[homepage]'     => $homepage,
+		'repository[public]'       => 'true',
+		'commit'                   => 'Create Repository',
+	}
+	);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Grab the URLs
+like( $mech->content, qr/git remote add origin/, "Saw remote add statement" );
+
+my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
+system( "git remote add $Config{remote_name} $private" );
+system( "git push $Config{remote_name} master" );
