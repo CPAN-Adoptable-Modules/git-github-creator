@@ -23,18 +23,19 @@ repository to create a remote repo on Github using a previously
 created account. This does not create Github accounts (and that
 violates the terms of service).
 
-It takes its information from META.yml. If the script doesn't 
-find a META.yml, it tries to run `make metafile` to create one. Sorry,
-no Module::Build support just yet only because I don't need it yet.
+It takes its information from META.yml. If the script doesn't find a
+META.yml, it tries to run `make metafile` to create one. Sorry, no
+Module::Build support just yet only because I don't need it yet.
 
-From META.yml it gets the module name and abstract, which it uses 
-for the Github project name and description. 
+From META.yml it gets the module name and abstract, which it uses for
+the Github project name and description. It uses the CPAN Search page
+as the homepage (e.g. http://search.cpan.org/dist/Foo-Bar).
 
 Once it creates the remote repo, it adds a git remote named "origin"
 (unless you change that in the config), then pushes master to it.
 
-If Github send back the right page, the script ends by printing
-the private git URL.
+If Github send back the right page, the script ends by printing the
+private git URL.
 
 =head1 CONFIGURATION
 
@@ -122,9 +123,11 @@ my %Config = ();
 my $Section = 'github';
 my $ini;
 
+my $basename = basename( $0 );
+
 foreach my $dir ( ".", $ENV{HOME} )
 	{
-	my $file = catfile( $dir, ".$0.ini" );
+	my $file = catfile( $dir, ".$basename.ini" );
 	DEBUG( "Trying config file [$file]" );
 	next unless -e $file;
 
