@@ -105,7 +105,8 @@ BEGIN {
 		if exists $remotes{'github'};
 	}
 
-use Config::IniFiles;	
+use Config::IniFiles;
+use File::Basename;
 use File::Find;
 use File::Find::Closures qw(find_by_name);
 use File::Spec::Functions qw(catfile);
@@ -115,7 +116,7 @@ use YAML;
 
 Log::Log4perl->easy_init( $DEBUG );
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Read config
 my %Config = ();
 
@@ -145,15 +146,15 @@ my %Defaults = (
 	remote_name => 'origin',
 	debug       => 0,
 	);
-	
+
 foreach my $key ( keys %Defaults )
 	{
-	$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};	
+	$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
 	DEBUG( "$key is $Config{$key}" );
 	}
 }
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Get module info from META.yml
 system( "$^X Makefile.PL" ) unless -e "Makefile";
 system( "make metafile" ) unless -e 'META.yml';
@@ -174,18 +175,18 @@ DEBUG( "Project description is [$abstract]" );
 
 my $homepage = "http://search.cpan.org/dist/$name";
 DEBUG( "Project homepage is [$homepage]" );
-	
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Get to Github
 my $mech = WWW::Mechanize->new;
 $mech->agent_alias( 'Mac Safari' );
 
 $mech->get( "https://github.com/login" );
 
-die "Couldn't recognize login page!\n" unless 
+die "Couldn't recognize login page!\n" unless
 	$mech->content =~ qr/Login/;
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Log in
 $mech->submit_form(
 	form_number => 1,
@@ -197,17 +198,17 @@ $mech->submit_form(
 	}
 	);
 
-die "Couldn't recognize 'create a new one' link!\n" unless 
+die "Couldn't recognize 'create a new one' link!\n" unless
 	$mech->content =~ qr/create a new one/;
 
 $mech->follow_link( text => '(create a new one)' );
 
-die "Couldn't recognize creation form!\n" unless 
+die "Couldn't recognize creation form!\n" unless
 	$mech->content =~ qr/Create a New Repository/;
 
 die "Exiting since you are debugging\n" if $Config{debug};
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Create the repository
 $mech->submit_form(
 	form_number => 2,
@@ -220,7 +221,7 @@ $mech->submit_form(
 	}
 	);
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Grab the URLs
 my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
 system( "git remote add $Config{remote_name} $private" );
