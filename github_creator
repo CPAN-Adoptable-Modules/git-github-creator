@@ -4,7 +4,7 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = 0.11;
+$VERSION = 0.12;
 
 =head1 NAME
 
@@ -121,8 +121,8 @@ die "github remote already exists! Exiting\n"
 require Config::IniFiles;
 require File::Basename;
 require File::Find;
-require File::Find::Closures; File::Find::Closures->import( qw(find_by_name) );
-require File::Spec::Functions; File::Spec::Functions->import( qw(catfile) );
+require File::Find::Closures;
+require File::Spec;
 require WWW::Mechanize;
 require YAML;
 
@@ -134,11 +134,11 @@ my %Config = ();
 my $Section = 'github';
 my $ini;
 
-my $basename = basename( $0 );
+my $basename = File::Basename::basename( $0 );
 
 foreach my $dir ( ".", $ENV{HOME} )
 	{
-	my $file = catfile( $dir, ".$basename.ini" );
+	my $file = File::Spec->catfile( $dir, ".$basename.ini" );
 	DEBUG( "Trying config file [$file]" );
 	next unless -e $file;
 
@@ -169,8 +169,8 @@ foreach my $key ( keys %Defaults )
 system( "$^X Makefile.PL" ) unless -e "Makefile";
 system( "make metafile" ) unless -e 'META.yml';
 
-my( $wanted, $reporter ) = find_by_name( "META.yml" );
-find( $wanted, "." );
+my( $wanted, $reporter ) = File::Find::Closures::find_by_name( "META.yml" );
+File::Find::find( $wanted, "." );
 my @metas = $reporter->();
 die "Found more than one META.yml!\n" if @metas > 1;
 DEBUG( "META.yml is at $metas[0]" );
