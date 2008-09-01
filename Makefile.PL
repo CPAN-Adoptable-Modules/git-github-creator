@@ -13,11 +13,12 @@ WriteMakefile(
 	'AUTHOR'       => 'brian d foy <bdfoy@cpan.org>',
 	
 	'PREREQ_PM'    => { 
-		'Test::More'           => '0',
-		'YAML'                 => '0',
 		'Config::IniFiles'     => '0',
 		'File::Find::Closures' => '0',
+		'Log::Log4perl'        => '0',
+		'Test::More'           => '0',
 		'WWW::Mechanize'       => '0',
+		'YAML'                 => '0',
 		},
 
 	'EXE_FILES'    => [ 'github_creator' ],
