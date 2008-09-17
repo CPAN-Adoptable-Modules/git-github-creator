@@ -239,5 +239,7 @@ my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
 DEBUG( "Private URL is [$private]" );
 die "No private URL! Might be GitHub's fault\n" unless defined $private;
 
+sleep 5; # github needs a moment to thing
+
 system( "git remote add $Config{remote_name} $private" );
 system( "git push $Config{remote_name} master" );
