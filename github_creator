@@ -204,7 +204,6 @@ $mech->submit_form(
 	fields      => {
 		login       => $Config{account},
 		password    => $Config{password},
-		remember_me => 1,
 		commit      => 'Log in',
 	}
 	);
