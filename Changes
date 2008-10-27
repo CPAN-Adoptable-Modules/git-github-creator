@@ -2,6 +2,9 @@
 	* My dinky little script to log into Github, create a new repo,
 	and tell me what it is. I then push to it. Whoop-de-doo!
 
+0.13 - Mon Oct 27 13:10:22 2008
+	* Fixups to the Makefile. No big whoop.
+
 0.12 - Sat Aug 30 19:23:50 2008
 	* Fixups to lazy loading of modules. Have to get those imports
 	right!
