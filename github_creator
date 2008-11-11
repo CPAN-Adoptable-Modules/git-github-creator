@@ -4,11 +4,11 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 =head1 NAME
 
-git_creator - Create a Github repository for your Perl module
+github_creator - Create a Github repository for your Perl module
 
 =head1 SYNOPSIS
 
@@ -35,7 +35,7 @@ as the homepage (e.g. http://search.cpan.org/dist/Foo-Bar).
 Once it creates the remote repo, it adds a git remote named "origin"
 (unless you change that in the config), then pushes master to it.
 
-If Github send back the right page, the script ends by printing the
+If Github sends back the right page, the script ends by printing the
 private git URL.
 
 =head1 CONFIGURATION
@@ -49,11 +49,11 @@ Example:
 	[github]
 	login_page="https://github.com/login"
 	account=joe@example.com
-	pasword=foobar
+	password=foobar
 	remote_name=github
 	debug=1
 
-=head2 Section [git]
+=head2 Section [github]
 
 =over 4
 
@@ -84,6 +84,10 @@ Do everything but don't actually create the Githun repo.
 
 The Github webserver seems to not return the right page every so
 often, so things might go wrong. Try again a couple times.
+
+Sometimes there is a delay in the availability of your new repo. This
+script sleeps a couple of seconds then tries to verify that the new repo
+is there. If it can't see it, look at Github first to see if it showed up.
 
 =head1 SOURCE AVAILABILITY
 
@@ -238,7 +242,7 @@ my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
 DEBUG( "Private URL is [$private]" );
 die "No private URL! Might be GitHub's fault\n" unless defined $private;
 
-sleep 5; # github needs a moment to thing
+sleep 5; # github needs a moment to think
 
 system( "git remote add $Config{remote_name} $private" );
 system( "git push $Config{remote_name} master" );
