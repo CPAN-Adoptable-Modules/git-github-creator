@@ -170,13 +170,17 @@ foreach my $key ( keys %Defaults )
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Get module info from META.yml
-system( "$^X Makefile.PL" ) unless -e "Makefile";
-system( "make metafile" ) unless -e 'META.yml';
+if ( ! -e 'META.yml' ) 
+  {
+  system( "$^X Makefile.PL" ) if ( -e 'Makefile.PL' && ! -e 'Makefile' );
+  system( "make metafile" ) if -e 'Makefile';
+  }
 
 my( $wanted, $reporter ) = File::Find::Closures::find_by_name( "META.yml" );
 File::Find::find( $wanted, "." );
 my @metas = $reporter->();
 die "Found more than one META.yml!\n" if @metas > 1;
+die "No META.yml found\n" if @metas == 0;
 DEBUG( "META.yml is at $metas[0]" );
 
 my $meta = YAML::LoadFile( $metas[0] );
