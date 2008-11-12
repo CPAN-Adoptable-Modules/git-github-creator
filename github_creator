@@ -176,14 +176,10 @@ if ( ! -e 'META.yml' )
   system( "make metafile" ) if -e 'Makefile';
   }
 
-my( $wanted, $reporter ) = File::Find::Closures::find_by_name( "META.yml" );
-File::Find::find( $wanted, "." );
-my @metas = $reporter->();
-die "Found more than one META.yml!\n" if @metas > 1;
-die "No META.yml found\n" if @metas == 0;
-DEBUG( "META.yml is at $metas[0]" );
+die "No META.yml found\n" unless -e 'META.yml';
+DEBUG( "META.yml found" );
 
-my $meta = YAML::LoadFile( $metas[0] );
+my $meta = YAML::LoadFile( 'META.yml' );
 
 my $name     = $meta->{name};
 my $abstract = "(Perl) " . $meta->{abstract};
