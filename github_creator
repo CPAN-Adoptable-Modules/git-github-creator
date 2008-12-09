@@ -186,8 +186,16 @@ sub run
 	# Get module info from META.yml
 	if ( ! -e 'META.yml' ) 
 	  {
-	  system( "$^X Makefile.PL" ) if ( -e 'Makefile.PL' && ! -e 'Makefile' );
-	  system( "make metafile" ) if -e 'Makefile';
+          if ( -e 'Makefile.PL' ) 
+            {
+	            system "$^X Makefile.PL" unless -e 'Makefile';
+                system "make metafile"   if     -e 'Makefile';
+            }
+         elsif( -e 'Build.PL' ) 
+            {
+	            system "$^X Build.PL"     unless -e 'Build';
+                system './Build distmeta' if     -e 'Build';
+            }
 	  }
 	
 	die "No META.yml found\n" unless -e 'META.yml';
@@ -225,7 +233,7 @@ sub run
 			commit      => 'Log in',
 		}
 		);
-	
+
 	die "Couldn't recognize 'create a new one' link!\n" unless
 		$mech->content =~ qr/create a new one/;
 	
