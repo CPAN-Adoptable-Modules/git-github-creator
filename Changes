@@ -1,5 +1,9 @@
 # Changes for github_creator.pl 
 
+0.15 - Tue Dec  9 20:23:49 2008
+	* Changes from Yanick to support Module::Build
+	* Changes from David Golden to be smart about META.yml
+
 0.13 - Mon Oct 27 13:10:22 2008
 	* Fixups to the Makefile. No big whoop.
 
