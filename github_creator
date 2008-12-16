@@ -15,10 +15,10 @@ github_creator - Create a Github repository for your Perl module
 
 =head1 SYNOPSIS
 
-#edit ~/.github_creator.ini
-
-#Inside a git repo
-% github_creator
+ #edit ~/.github_creator.ini
+ 
+ #Inside a git repo
+ % github_creator
 
 =head1 DESCRIPTION
 
