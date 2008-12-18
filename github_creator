@@ -172,11 +172,11 @@ sub run
 	die "Could not read config file!\n" unless defined $ini;
 	
 	my %Defaults = (
-		login_page  => "https://github.com/login",
-		account     => $ENV{GITHUB_USER} || '',
-		password    => $ENV{GITHUB_PASS} || '',
+		login_page	=> "https://github.com/login",
+		account		 => $ENV{GITHUB_USER} || '',
+		password		=> $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
-		debug       => 0,
+		debug			 => 0,
 		);
 	
 	foreach my $key ( keys %Defaults )
@@ -187,9 +187,8 @@ sub run
 	}
 	
 	my $meta = $self->_get_metadata;
-
 	
-	my $name     = $meta->{name};
+	my $name		 = $meta->{name};
 	my $abstract = "(Perl) " . $meta->{abstract};
 	
 	DEBUG( "Project is [$name]" );
@@ -213,10 +212,10 @@ sub run
 	# Log in
 	$mech->submit_form(
 		form_number => 1,
-		fields      => {
-			login       => $Config{account},
-			password    => $Config{password},
-			commit      => 'Log in',
+		fields			=> {
+			login			 => $Config{account},
+			password		=> $Config{password},
+			commit			=> 'Log in',
 		}
 		);
 
@@ -235,12 +234,12 @@ sub run
 	# Create the repository
 	$mech->submit_form(
 		form_number => 2,
-		fields      => {
-			'repository[name]'         => $name,
-			'repository[description]'  => $abstract,
-			'repository[homepage]'     => $homepage,
-			'repository[public]'       => 'true',
-			'commit'                   => 'Create Repository',
+		fields			=> {
+			'repository[name]'				 => $name,
+			'repository[description]'	=> $abstract,
+			'repository[homepage]'		 => $homepage,
+			'repository[public]'			 => 'true',
+			'commit'									 => 'Create Repository',
 		}
 		);
 	
@@ -256,29 +255,44 @@ sub run
 	system( "git push $Config{remote_name} master" );
 	}
 
+sub _meta_yml
+	{
+	my ($self, $name) = @_;
+
+	return $self->{meta_yml} ||= do
+		{
+		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+		# Get module info from META.yml
+		if ( ! -e 'META.yml' ) 
+			{
+			if ( -e 'Makefile.PL' ) 
+				{
+				system "$^X Makefile.PL" unless -e 'Makefile';
+				system "make metafile"	 if		 -e 'Makefile';
+				}
+		 elsif( -e 'Build.PL' ) 
+				{
+				system "$^X Build.PL"		 unless -e 'Build';
+				system './Build distmeta' if		 -e 'Build';
+				}
+			}
+		
+		die "No META.yml found\n" unless -e 'META.yml';
+		DEBUG( "META.yml found" );
+		
+		YAML::LoadFile( 'META.yml' );
+		};
+	}
+
 sub _get_metadata
 	{
 	my ($self) = @_;
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Get module info from META.yml
-	if ( ! -e 'META.yml' ) 
-	  {
-          if ( -e 'Makefile.PL' ) 
-            {
-	            system "$^X Makefile.PL" unless -e 'Makefile';
-                system "make metafile"   if     -e 'Makefile';
-            }
-         elsif( -e 'Build.PL' ) 
-            {
-	            system "$^X Build.PL"     unless -e 'Build';
-                system './Build distmeta' if     -e 'Build';
-            }
-	  }
-	
-	die "No META.yml found\n" unless -e 'META.yml';
-	DEBUG( "META.yml found" );
-	
-	my $meta = YAML::LoadFile( 'META.yml' );
+
+	return
+		{
+	  name     => $self->_meta_yml->{name},
+	  abstract => $self->_meta_yml->{abstract},
+		};
 	}
 
 sub _getopt
