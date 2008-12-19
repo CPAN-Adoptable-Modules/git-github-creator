@@ -127,9 +127,6 @@ sub run
 	{
 	my ($class, @argv) = @_;
 
-	my $opts = $class->_getopt(\@argv);
-	my $self = bless $opts => $class;
-	
 	{
 	chomp( my @remotes = `git remote` );
 	my %remotes = map { $_, 1 } @remotes;
@@ -145,6 +142,7 @@ sub run
 	require File::Find;
 	require File::Find::Closures;
 	require File::Spec;
+	require Getopt::Long;
 	require WWW::Mechanize;
 	require YAML;
 	
@@ -185,6 +183,9 @@ sub run
 		DEBUG( "$key is $Config{$key}" );
 		}
 	}
+
+	my $opts = $class->_getopt(\@argv);
+	my $self = bless $opts => $class;
 	
 	my $meta = $self->_get_metadata;
 	
@@ -290,14 +291,22 @@ sub _get_metadata
 
 	return
 		{
-	  name     => $self->_meta_yml->{name},
-	  abstract => $self->_meta_yml->{abstract},
+	  name     => $self->{name}     || $self->_meta_yml->{name},
+	  abstract => $self->{abstract} || $self->_meta_yml->{abstract},
 		};
 	}
 
 sub _getopt
 	{
 	my ($self, $argv) = @_;
-	return {};
+
+  my %opt;
+  Getopt::Long::GetOptionsFromArray(
+    $argv,
+    'abstract=s' => \$opt{abstract},
+    'name=s'     => \$opt{name},
+  );
+
+	return \%opt
 	}
 
