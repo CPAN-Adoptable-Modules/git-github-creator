@@ -16,7 +16,7 @@ github_creator - Create a Github repository for your Perl module
 =head1 SYNOPSIS
 
  #edit ~/.github_creator.ini
- 
+
  #Inside a git repo
  % github_creator
 
@@ -28,8 +28,7 @@ created account. This does not create Github accounts (and that
 violates the terms of service).
 
 It takes its information from META.yml. If the script doesn't find a
-META.yml, it tries to run `make metafile` to create one. Sorry, no
-Module::Build support just yet only because I don't need it yet.
+META.yml, it tries to run `make metafile` to create one.
 
 From META.yml it gets the module name and abstract, which it uses for
 the Github project name and description. It uses the CPAN Search page
@@ -102,6 +101,8 @@ This source is part of a Github project:
 
 brian d foy, C<< <bdfoy@cpan.org> >>
 
+David Golden and Ricardo SIGNES contributed to the code.
+
 =head1 COPYRIGHT
 
 Copyright (c) 2008, brian d foy, All Rights Reserved.
@@ -134,7 +135,7 @@ sub run
 	die "github remote already exists! Exiting\n"
 		if exists $remotes{'github'};
 	}
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Okay, we should run, so pull in the modules
 	require Config::IniFiles;
@@ -142,41 +143,40 @@ sub run
 	require File::Find;
 	require File::Find::Closures;
 	require File::Spec;
-	require Getopt::Long;
 	require WWW::Mechanize;
 	require YAML;
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Read config
 	my %Config = ();
-	
+
 	{
 	my $Section = 'github';
 	my $ini;
-	
+
 	my $basename = File::Basename::basename( $0 );
-	
+
 	foreach my $dir ( ".", $ENV{HOME} )
 		{
 		my $file = File::Spec->catfile( $dir, ".$basename.ini" );
 		DEBUG( "Trying config file [$file]" );
 		next unless -e $file;
-	
+
 		$ini = Config::IniFiles->new( -file => $file );
-	
+
 		last;
 		}
-	
+
 	die "Could not read config file!\n" unless defined $ini;
-	
+
 	my %Defaults = (
-		login_page	=> "https://github.com/login",
-		account		 => $ENV{GITHUB_USER} || '',
-		password		=> $ENV{GITHUB_PASS} || '',
+		login_page  => "https://github.com/login",
+		account     => $ENV{GITHUB_USER} || '',
+		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
-		debug			 => 0,
+		debug       => 0,
 		);
-	
+
 	foreach my $key ( keys %Defaults )
 		{
 		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
@@ -186,72 +186,72 @@ sub run
 
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
-	
+
 	my $meta = $self->_get_metadata;
-	
-	my $name		 = $meta->{name};
+
+	my $name     = $meta->{name};
 	my $abstract = "(Perl) " . $meta->{abstract};
-	
+
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$abstract]" );
-	
+
 	my $homepage = "http://search.cpan.org/dist/$name";
 	DEBUG( "Project homepage is [$homepage]" );
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
 	my $mech = WWW::Mechanize->new;
 	$mech->agent_alias( 'Mac Safari' );
-	
+
 	$mech->get( "https://github.com/login" );
-	
+
 	die "Couldn't recognize login page!\n" unless
 		$mech->content =~ qr/Login/;
 	DEBUG( "Got to GitHub" );
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Log in
 	$mech->submit_form(
 		form_number => 1,
-		fields			=> {
-			login			 => $Config{account},
-			password		=> $Config{password},
-			commit			=> 'Log in',
+		fields      => {
+			login     => $Config{account},
+			password  => $Config{password},
+			commit    => 'Log in',
 		}
 		);
 
 	die "Couldn't recognize 'create a new one' link!\n" unless
 		$mech->content =~ qr/create a new one/;
-	
+
 	$mech->follow_link( text => '(create a new one)' );
-	
+
 	die "Couldn't recognize creation form!\n" unless
 		$mech->content =~ qr/Create a New Repository/;
-	
+
 	die "Exiting since you are debugging\n" if $Config{debug};
 	DEBUG( "Logged in" );
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Create the repository
 	$mech->submit_form(
 		form_number => 2,
-		fields			=> {
-			'repository[name]'				 => $name,
-			'repository[description]'	=> $abstract,
-			'repository[homepage]'		 => $homepage,
-			'repository[public]'			 => 'true',
-			'commit'									 => 'Create Repository',
+		fields => {
+			'repository[name]'          => $name,
+			'repository[description]'   => $abstract,
+			'repository[homepage]'      => $homepage,
+			'repository[public]'        => 'true',
+			'commit'                    => 'Create Repository',
 		}
 		);
-	
+
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Grab the URLs
 	my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
 	DEBUG( "Private URL is [$private]" );
 	die "No private URL! Might be GitHub's fault\n" unless defined $private;
-	
+
 	sleep 5; # github needs a moment to think
-	
+
 	system( "git remote add $Config{remote_name} $private" );
 	system( "git push $Config{remote_name} master" );
 	}
@@ -264,23 +264,23 @@ sub _meta_yml
 		{
 		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 		# Get module info from META.yml
-		if ( ! -e 'META.yml' ) 
+		if ( ! -e 'META.yml' )
 			{
-			if ( -e 'Makefile.PL' ) 
+			if ( -e 'Makefile.PL' )
 				{
 				system "$^X Makefile.PL" unless -e 'Makefile';
-				system "make metafile"	 if		 -e 'Makefile';
+				system "make metafile"   if     -e 'Makefile';
 				}
-		 elsif( -e 'Build.PL' ) 
+		 elsif( -e 'Build.PL' )
 				{
-				system "$^X Build.PL"		 unless -e 'Build';
-				system './Build distmeta' if		 -e 'Build';
+				system "$^X Build.PL"     unless -e 'Build';
+				system './Build distmeta' if     -e 'Build';
 				}
 			}
-		
+
 		die "No META.yml found\n" unless -e 'META.yml';
 		DEBUG( "META.yml found" );
-		
+
 		YAML::LoadFile( 'META.yml' );
 		};
 	}
@@ -291,8 +291,8 @@ sub _get_metadata
 
 	return
 		{
-	  name     => $self->{name}     || $self->_meta_yml->{name},
-	  abstract => $self->{abstract} || $self->_meta_yml->{abstract},
+		name     => $self->{name}     || $self->_meta_yml->{name},
+		abstract => $self->{abstract} || $self->_meta_yml->{abstract},
 		};
 	}
 
@@ -300,12 +300,14 @@ sub _getopt
 	{
 	my ($self, $argv) = @_;
 
-  my %opt;
-  Getopt::Long::GetOptionsFromArray(
-    $argv,
-    'abstract=s' => \$opt{abstract},
-    'name=s'     => \$opt{name},
-  );
+	require Getopt::Long;
+
+	my %opt;
+	Getopt::Long::GetOptionsFromArray(
+		$argv,
+		'abstract|a=s' => \$opt{abstract},
+		'name|n=s'     => \$opt{name},
+		);
 
 	return \%opt
 	}
