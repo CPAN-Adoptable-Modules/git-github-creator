@@ -11,14 +11,14 @@ $VERSION = '0.15';
 
 =head1 NAME
 
-github_creator - Create a Github repository for your Perl module
+github_creator - Create a Github repository from your local repository
 
 =head1 SYNOPSIS
 
  #edit ~/.github_creator.ini
 
- #Inside a git repo
- % github_creator
+ # Inside a git repo
+ % github_creator --name my-project --desc "an awesome thing"
 
 =head1 DESCRIPTION
 
@@ -27,8 +27,9 @@ repository to create a remote repo on Github using a previously
 created account. This does not create Github accounts (and that
 violates the terms of service).
 
-It takes its information from META.yml. If the script doesn't find a
-META.yml, it tries to run `make metafile` to create one.
+If the C<--name> and C<--desc> switches are not given, it will try
+to find them in META.yml. If the script doesn't find a META.yml, it
+tries to run `make metafile` (or `Build distmeta`) to create one.
 
 From META.yml it gets the module name and abstract, which it uses for
 the Github project name and description. It uses the CPAN Search page
@@ -189,11 +190,11 @@ sub run
 
 	my $meta = $self->_get_metadata;
 
-	my $name     = $meta->{name};
-	my $abstract = "(Perl) " . $meta->{abstract};
+	my $name = $meta->{name};
+	my $desc = $meta->{desc};
 
 	DEBUG( "Project is [$name]" );
-	DEBUG( "Project description is [$abstract]" );
+	DEBUG( "Project description is [$desc]" );
 
 	my $homepage = "http://search.cpan.org/dist/$name";
 	DEBUG( "Project homepage is [$homepage]" );
@@ -237,7 +238,7 @@ sub run
 		form_number => 2,
 		fields => {
 			'repository[name]'          => $name,
-			'repository[description]'   => $abstract,
+			'repository[description]'   => $desc,
 			'repository[homepage]'      => $homepage,
 			'repository[public]'        => 'true',
 			'commit'                    => 'Create Repository',
@@ -291,8 +292,8 @@ sub _get_metadata
 
 	return
 		{
-		name     => $self->{name}     || $self->_meta_yml->{name},
-		abstract => $self->{abstract} || $self->_meta_yml->{abstract},
+		name => $self->{name} || $self->_meta_yml->{name},
+		desc => $self->{desc} || '(Perl) ' . $self->_meta_yml->{abstract},
 		};
 	}
 
@@ -305,8 +306,8 @@ sub _getopt
 	my %opt;
 	Getopt::Long::GetOptionsFromArray(
 		$argv,
-		'abstract|a=s' => \$opt{abstract},
-		'name|n=s'     => \$opt{name},
+		'desc|d=s' => \$opt{desc},
+		'name|n=s' => \$opt{name},
 		);
 
 	return \%opt
