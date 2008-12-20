@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# vim:set noet ts=2 sw=2:
 
 package Git::GitHub::Creator;
 
@@ -15,10 +16,10 @@ github_creator - Create a Github repository from your local repository
 
 =head1 SYNOPSIS
 
- #edit ~/.github_creator.ini
+	# edit ~/.github_creator.ini
 
- # Inside a git repo
- % github_creator --name my-project --desc "an awesome thing"
+	# Inside a git repo
+	% github_creator --name my-project --desc "an awesome thing"
 
 =head1 DESCRIPTION
 
@@ -60,6 +61,7 @@ Example:
 
 =over 4
 
+  
 =item login_page (default = https://github.com/login)
 
 This shouldn't change, but what the hell. It's the only URL
