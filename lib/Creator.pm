@@ -7,11 +7,11 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.16';
+$VERSION = '0.17';
 
 =head1 NAME
 
-github_creator - Create a Github repository from your local repository
+Git::Github::Creator - Create a Github repository from your local repository
 
 =head1 SYNOPSIS
 
@@ -44,7 +44,19 @@ Once it creates the remote repo, it adds a git remote named "origin"
 If Github sends back the right page, the script ends by printing the
 private git URL.
 
-=head1 CONFIGURATION
+=head2 METHODS
+
+=over 4
+
+=item run( LIST )
+
+Makes the magic happen. LIST is the stuff you'd put on the command line.
+If you call the module as a script, the C<run> method is called for you
+automatically.
+
+=back
+
+=head2 CONFIGURATION
 
 The configuration file is an INI file named F<.github_creator.ini>
 which the script looks for in the current directory or your home
@@ -316,4 +328,6 @@ sub _getopt
 
 	return \%opt
 	}
+
+1;
 
