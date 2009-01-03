@@ -1,14 +1,15 @@
 #!/usr/bin/perl
 # vim:set noet ts=2 sw=2:
-
-package Git::GitHub::Creator;
-
 use strict;
 use warnings;
-use subs qw(INFO DEBUG);
+
 use vars qw($VERSION);
 
-$VERSION = '0.15';
+$VERSION = '0.16';
+
+use Git::Github::Creator;
+
+Git::Github::Creator->run( @ARGV );
 
 =head1 NAME
 
@@ -21,6 +22,9 @@ github_creator - Create a Github repository from your local repository
 	# Inside a git repo
 	% github_creator --name my-project --desc "an awesome thing"
 
+	# for a Perl distro, figure it out through META.yml
+	% github_creator
+	
 =head1 DESCRIPTION
 
 This is a short script you can run from within an existing git
@@ -108,210 +112,10 @@ David Golden and Ricardo SIGNES contributed to the code.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008, brian d foy, All Rights Reserved.
+Copyright (c) 2008-2009, brian d foy, All Rights Reserved.
 
 You may redistribute this under the same terms as Perl itself.
 
 =cut
 
-use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init( $INFO );
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Should we run?
-
-__PACKAGE__->run( @ARGV ) unless caller;
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# It's all a big method right now, but we can refactor it.
-# This is just a quick way to get it indexed in PAUSE as
-# a module.
-
-sub run
-	{
-	my ($class, @argv) = @_;
-
-	{
-	chomp( my @remotes = `git remote` );
-	my %remotes = map { $_, 1 } @remotes;
-	DEBUG( "Remotes are [@remotes]\n" );
-	die "github remote already exists! Exiting\n"
-		if exists $remotes{'github'};
-	}
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Okay, we should run, so pull in the modules
-	require Config::IniFiles;
-	require File::Basename;
-	require File::Find;
-	require File::Find::Closures;
-	require File::Spec;
-	require WWW::Mechanize;
-	require YAML;
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Read config
-	my %Config = ();
-
-	{
-	my $Section = 'github';
-	my $ini;
-
-	my $basename = File::Basename::basename( $0 );
-
-	foreach my $dir ( ".", $ENV{HOME} )
-		{
-		my $file = File::Spec->catfile( $dir, ".$basename.ini" );
-		DEBUG( "Trying config file [$file]" );
-		next unless -e $file;
-
-		$ini = Config::IniFiles->new( -file => $file );
-
-		last;
-		}
-
-	die "Could not read config file!\n" unless defined $ini;
-
-	my %Defaults = (
-		login_page  => "https://github.com/login",
-		account     => $ENV{GITHUB_USER} || '',
-		password    => $ENV{GITHUB_PASS} || '',
-		remote_name => 'origin',
-		debug       => 0,
-		);
-
-	foreach my $key ( keys %Defaults )
-		{
-		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
-		DEBUG( "$key is $Config{$key}" );
-		}
-	}
-
-	my $opts = $class->_getopt(\@argv);
-	my $self = bless $opts => $class;
-
-	my $meta = $self->_get_metadata;
-
-	my $name = $meta->{name};
-	my $desc = $meta->{desc};
-
-	DEBUG( "Project is [$name]" );
-	DEBUG( "Project description is [$desc]" );
-
-	my $homepage = "http://search.cpan.org/dist/$name";
-	DEBUG( "Project homepage is [$homepage]" );
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Get to Github
-	my $mech = WWW::Mechanize->new;
-	$mech->agent_alias( 'Mac Safari' );
-
-	$mech->get( "https://github.com/login" );
-
-	die "Couldn't recognize login page!\n" unless
-		$mech->content =~ qr/Login/;
-	DEBUG( "Got to GitHub" );
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Log in
-	$mech->submit_form(
-		form_number => 1,
-		fields      => {
-			login     => $Config{account},
-			password  => $Config{password},
-			commit    => 'Log in',
-		}
-		);
-
-	die "Couldn't recognize 'create a new one' link!\n" unless
-		$mech->content =~ qr/create a new one/;
-
-	$mech->follow_link( text => '(create a new one)' );
-
-	die "Couldn't recognize creation form!\n" unless
-		$mech->content =~ qr/Create a New Repository/;
-
-	die "Exiting since you are debugging\n" if $Config{debug};
-	DEBUG( "Logged in" );
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Create the repository
-	$mech->submit_form(
-		form_number => 2,
-		fields => {
-			'repository[name]'          => $name,
-			'repository[description]'   => $desc,
-			'repository[homepage]'      => $homepage,
-			'repository[public]'        => 'true',
-			'commit'                    => 'Create Repository',
-		}
-		);
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Grab the URLs
-	my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
-	DEBUG( "Private URL is [$private]" );
-	die "No private URL! Might be GitHub's fault\n" unless defined $private;
-
-	sleep 5; # github needs a moment to think
-
-	system( "git remote add $Config{remote_name} $private" );
-	system( "git push $Config{remote_name} master" );
-	}
-
-sub _meta_yml
-	{
-	my ($self, $name) = @_;
-
-	return $self->{meta_yml} ||= do
-		{
-		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-		# Get module info from META.yml
-		if ( ! -e 'META.yml' )
-			{
-			if ( -e 'Makefile.PL' )
-				{
-				system "$^X Makefile.PL" unless -e 'Makefile';
-				system "make metafile"   if     -e 'Makefile';
-				}
-		 elsif( -e 'Build.PL' )
-				{
-				system "$^X Build.PL"     unless -e 'Build';
-				system './Build distmeta' if     -e 'Build';
-				}
-			}
-
-		die "No META.yml found\n" unless -e 'META.yml';
-		DEBUG( "META.yml found" );
-
-		YAML::LoadFile( 'META.yml' );
-		};
-	}
-
-sub _get_metadata
-	{
-	my ($self) = @_;
-
-	return
-		{
-		name => $self->{name} || $self->_meta_yml->{name},
-		desc => $self->{desc} || '(Perl) ' . $self->_meta_yml->{abstract},
-		};
-	}
-
-sub _getopt
-	{
-	my ($self, $argv) = @_;
-
-	require Getopt::Long;
-
-	my %opt;
-	Getopt::Long::GetOptionsFromArray(
-		$argv,
-		'desc|d=s' => \$opt{desc},
-		'name|n=s' => \$opt{name},
-		);
-
-	return \%opt
-	}
 

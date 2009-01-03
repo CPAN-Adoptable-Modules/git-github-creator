@@ -1,0 +1,319 @@
+# vim:set noet ts=2 sw=2:
+
+package Git::Github::Creator;
+
+use strict;
+use warnings;
+use subs qw(INFO DEBUG);
+use vars qw($VERSION);
+
+$VERSION = '0.16';
+
+=head1 NAME
+
+github_creator - Create a Github repository from your local repository
+
+=head1 SYNOPSIS
+
+	# edit ~/.github_creator.ini
+
+	# Inside a git repo
+	% github_creator --name my-project --desc "an awesome thing"
+
+	# for a Perl distro, figure it out through META.yml
+	% github_creator
+	
+=head1 DESCRIPTION
+
+This is a short script you can run from within an existing git
+repository to create a remote repo on Github using a previously
+created account. This does not create Github accounts (and that
+violates the terms of service).
+
+If the C<--name> and C<--desc> switches are not given, it will try
+to find them in META.yml. If the script doesn't find a META.yml, it
+tries to run `make metafile` (or `Build distmeta`) to create one.
+
+From META.yml it gets the module name and abstract, which it uses for
+the Github project name and description. It uses the CPAN Search page
+as the homepage (e.g. http://search.cpan.org/dist/Foo-Bar).
+
+Once it creates the remote repo, it adds a git remote named "origin"
+(unless you change that in the config), then pushes master to it.
+
+If Github sends back the right page, the script ends by printing the
+private git URL.
+
+=head1 CONFIGURATION
+
+The configuration file is an INI file named F<.github_creator.ini>
+which the script looks for in the current directory or your home
+directory (using the first one it finds).
+
+Example:
+
+	[github]
+	login_page="https://github.com/login"
+	account=joe@example.com
+	password=foobar
+	remote_name=github
+	debug=1
+
+=head2 Section [github]
+
+=over 4
+
+  
+=item login_page (default = https://github.com/login)
+
+This shouldn't change, but what the hell. It's the only URL
+you need to know.
+
+=item account (default = GITHUB_USER environment var)
+
+Your account name, which is probably your email address.
+
+=item password (default = GITHUB_PASS environment var)
+
+=item remote_name (default = origin)
+
+I like to use "github" though.
+
+=item debug (default = 0)
+
+Do everything but don't actually create the Githun repo.
+
+=back
+
+=cut
+
+=head1 ISSUES
+
+The Github webserver seems to not return the right page every so
+often, so things might go wrong. Try again a couple times.
+
+Sometimes there is a delay in the availability of your new repo. This
+script sleeps a couple of seconds then tries to verify that the new repo
+is there. If it can't see it, look at Github first to see if it showed up.
+
+=head1 SOURCE AVAILABILITY
+
+This source is part of a Github project:
+
+	git://github.com/briandfoy/github_creator.git
+
+=head1 AUTHOR
+
+brian d foy, C<< <bdfoy@cpan.org> >>
+
+David Golden and Ricardo SIGNES contributed to the code.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008-2009, brian d foy, All Rights Reserved.
+
+You may redistribute this under the same terms as Perl itself.
+
+=cut
+
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init( $INFO );
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Should we run?
+
+__PACKAGE__->run( @ARGV ) unless caller;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# It's all a big method right now, but we can refactor it.
+# This is just a quick way to get it indexed in PAUSE as
+# a module.
+
+sub run
+	{
+	my ($class, @argv) = @_;
+
+	{
+	chomp( my @remotes = `git remote` );
+	my %remotes = map { $_, 1 } @remotes;
+	DEBUG( "Remotes are [@remotes]\n" );
+	die "github remote already exists! Exiting\n"
+		if exists $remotes{'github'};
+	}
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Okay, we should run, so pull in the modules
+	require Config::IniFiles;
+	require File::Basename;
+	require File::Find;
+	require File::Find::Closures;
+	require File::Spec;
+	require WWW::Mechanize;
+	require YAML;
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Read config
+	my %Config = ();
+
+	{
+	my $Section = 'github';
+	my $ini;
+
+	my $basename = File::Basename::basename( $0 );
+
+	foreach my $dir ( ".", $ENV{HOME} )
+		{
+		my $file = File::Spec->catfile( $dir, ".$basename.ini" );
+		DEBUG( "Trying config file [$file]" );
+		next unless -e $file;
+
+		$ini = Config::IniFiles->new( -file => $file );
+
+		last;
+		}
+
+	die "Could not read config file!\n" unless defined $ini;
+
+	my %Defaults = (
+		login_page  => "https://github.com/login",
+		account     => $ENV{GITHUB_USER} || '',
+		password    => $ENV{GITHUB_PASS} || '',
+		remote_name => 'origin',
+		debug       => 0,
+		);
+
+	foreach my $key ( keys %Defaults )
+		{
+		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
+		DEBUG( "$key is $Config{$key}" );
+		}
+	}
+
+	my $opts = $class->_getopt(\@argv);
+	my $self = bless $opts => $class;
+
+	my $meta = $self->_get_metadata;
+
+	my $name = $meta->{name};
+	my $desc = $meta->{desc};
+
+	DEBUG( "Project is [$name]" );
+	DEBUG( "Project description is [$desc]" );
+
+	my $homepage = "http://search.cpan.org/dist/$name";
+	DEBUG( "Project homepage is [$homepage]" );
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Get to Github
+	my $mech = WWW::Mechanize->new;
+	$mech->agent_alias( 'Mac Safari' );
+
+	$mech->get( "https://github.com/login" );
+
+	die "Couldn't recognize login page!\n" unless
+		$mech->content =~ qr/Login/;
+	DEBUG( "Got to GitHub" );
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Log in
+	$mech->submit_form(
+		form_number => 1,
+		fields      => {
+			login     => $Config{account},
+			password  => $Config{password},
+			commit    => 'Log in',
+		}
+		);
+
+	die "Couldn't recognize 'create a new one' link!\n" unless
+		$mech->content =~ qr/create a new one/;
+
+	$mech->follow_link( text => '(create a new one)' );
+
+	die "Couldn't recognize creation form!\n" unless
+		$mech->content =~ qr/Create a New Repository/;
+
+	die "Exiting since you are debugging\n" if $Config{debug};
+	DEBUG( "Logged in" );
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Create the repository
+	$mech->submit_form(
+		form_number => 2,
+		fields => {
+			'repository[name]'          => $name,
+			'repository[description]'   => $desc,
+			'repository[homepage]'      => $homepage,
+			'repository[public]'        => 'true',
+			'commit'                    => 'Create Repository',
+		}
+		);
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Grab the URLs
+	my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
+	DEBUG( "Private URL is [$private]" );
+	die "No private URL! Might be GitHub's fault\n" unless defined $private;
+
+	sleep 5; # github needs a moment to think
+
+	system( "git remote add $Config{remote_name} $private" );
+	system( "git push $Config{remote_name} master" );
+	}
+
+sub _meta_yml
+	{
+	my ($self, $name) = @_;
+
+	return $self->{meta_yml} ||= do
+		{
+		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+		# Get module info from META.yml
+		if ( ! -e 'META.yml' )
+			{
+			if ( -e 'Makefile.PL' )
+				{
+				system "$^X Makefile.PL" unless -e 'Makefile';
+				system "make metafile"   if     -e 'Makefile';
+				}
+		 elsif( -e 'Build.PL' )
+				{
+				system "$^X Build.PL"     unless -e 'Build';
+				system './Build distmeta' if     -e 'Build';
+				}
+			}
+
+		die "No META.yml found\n" unless -e 'META.yml';
+		DEBUG( "META.yml found" );
+
+		YAML::LoadFile( 'META.yml' );
+		};
+	}
+
+sub _get_metadata
+	{
+	my ($self) = @_;
+
+	return
+		{
+		name => $self->{name} || $self->_meta_yml->{name},
+		desc => $self->{desc} || '(Perl) ' . $self->_meta_yml->{abstract},
+		};
+	}
+
+sub _getopt
+	{
+	my ($self, $argv) = @_;
+
+	require Getopt::Long;
+
+	my %opt;
+	Getopt::Long::GetOptionsFromArray(
+		$argv,
+		'desc|d=s' => \$opt{desc},
+		'name|n=s' => \$opt{name},
+		);
+
+	return \%opt
+	}
+

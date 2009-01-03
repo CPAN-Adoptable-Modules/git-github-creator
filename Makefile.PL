@@ -3,12 +3,12 @@ use ExtUtils::MakeMaker;
 
 require 5.006;
 
-eval "use Test::Manifest 1.14";
+eval "use Test::Manifest 1.21";
 
 WriteMakefile(
-	'NAME'	       => 'github_creator',
+	'NAME'	       => 'Git::Github::Creator',
 	'ABSTRACT'     => 'Create a Github repository for your Perl module',
-	'VERSION_FROM' => 'github_creator',
+	'VERSION_FROM' => 'lib/Creator.pm',
 	'LICENSE'      => 'perl',
 	'AUTHOR'       => 'brian d foy <bdfoy@cpan.org>',
 	
@@ -21,12 +21,16 @@ WriteMakefile(
 		'WWW::Mechanize'       => '0',
 		'YAML'                 => '0',
 		},
-
+	
+	'PM'           => {
+		'lib/Creator.pm' => '$(INST_LIBDIR)/Creator.pm',
+		},
+		
 	'EXE_FILES'    => [ 'github_creator' ],
 
 	'MAN1PODS'     => {
 		'github_creator' => '$(INST_MAN1DIR)/github_creator.1',
 		},
 
-	clean  => { FILES    => q|github_creator-*| },
+	clean  => { FILES    => q|Git-*| },
 	);
