@@ -22,3 +22,4 @@ t/cover_db*
 .git
 \.old$
 github_creator-
+Git-.*
