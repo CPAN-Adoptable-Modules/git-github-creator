@@ -28,5 +28,14 @@ WriteMakefile(
 		'github_creator' => '$(INST_MAN1DIR)/github_creator.1',
 		},
 
+  (eval { ExtUtils::MakeMaker->VERSION(6.46) }
+    ? (META_MERGE => {
+        resources => {
+          Repository => 'http://github.com/briandfoy/github_creator'
+          }
+        })
+    : ()
+    ),
+
 	clean  => { FILES    => q|github_creator-*| },
 	);
