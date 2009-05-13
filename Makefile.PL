@@ -29,7 +29,7 @@ WriteMakefile(
 	'EXE_FILES'    => [ 'github_creator' ],
 
 	'MAN1PODS'     => {
-		'github_creator' => '$(INST_MAN1DIR)/github_creator.1',
+		'github_creator' => '$(INST_MAN1DIR)/github_creator.$(MAN1EXT)',
 		},
 
   (eval { ExtUtils::MakeMaker->VERSION(6.46) }
