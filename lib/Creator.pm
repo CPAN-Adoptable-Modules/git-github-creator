@@ -229,7 +229,7 @@ sub run
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Log in
 	$mech->submit_form(
-		form_number => 1,
+		form_number => 2,
 		fields      => {
 			login     => $Config{account},
 			password  => $Config{password},
@@ -251,7 +251,7 @@ sub run
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Create the repository
 	$mech->submit_form(
-		form_number => 2,
+		form_number => 3,
 		fields => {
 			'repository[name]'          => $name,
 			'repository[description]'   => $desc,
