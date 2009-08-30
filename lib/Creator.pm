@@ -66,6 +66,7 @@ Example:
 
 	[github]
 	login_page="https://github.com/login"
+    api-token=123456789023455667890234deadbeef
 	account=joe@example.com
 	password=foobar
 	remote_name=github
@@ -84,6 +85,11 @@ you need to know.
 =item account (default = GITHUB_USER environment var)
 
 Your account name, which is probably your email address.
+
+=item api-token
+
+The Github API token linked to your account 
+(should be visible at https://github.com/account)
 
 =item password (default = GITHUB_PASS environment var)
 
@@ -160,8 +166,8 @@ sub run
 	require File::Find;
 	require File::Find::Closures;
 	require File::Spec;
-	require WWW::Mechanize;
 	require YAML;
+    require Net::GitHub;
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Read config
@@ -192,6 +198,7 @@ sub run
 		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
 		debug       => 0,
+        'api-token' => '',
 		);
 
 	foreach my $key ( keys %Defaults )
@@ -217,55 +224,36 @@ sub run
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
-	my $mech = WWW::Mechanize->new;
-	$mech->agent_alias( 'Mac Safari' );
 
-	$mech->get( "https://github.com/login" );
+    my $github = Net::GitHub->new(
+        owner => $Config{account},
+        login => $Config{account},
+        token => $Config{'api-token'},
+        repo => $name,
+    );
 
-	die "Couldn't recognize login page!\n" unless
-		$mech->content =~ qr/Login/;
 	DEBUG( "Got to GitHub" );
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Log in
-	$mech->submit_form(
-		form_number => 2,
-		fields      => {
-			login     => $Config{account},
-			password  => $Config{password},
-			commit    => 'Log in',
-		}
-		);
-
-	die "Couldn't recognize 'create a new one' link!\n" unless
-		$mech->content =~ qr/create a new one/;
-
-	$mech->follow_link( text => '(create a new one)' );
-
-	die "Couldn't recognize creation form!\n" unless
-		$mech->content =~ qr/Create a New Repository/;
 
 	die "Exiting since you are debugging\n" if $Config{debug};
 	DEBUG( "Logged in" );
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Create the repository
-	$mech->submit_form(
-		form_number => 3,
-		fields => {
-			'repository[name]'          => $name,
-			'repository[description]'   => $desc,
-			'repository[homepage]'      => $homepage,
-			'repository[public]'        => 'true',
-			'commit'                    => 'Create Repository',
-		}
-		);
 
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Grab the URLs
-	my( $private ) = $mech->content =~ m/git remote add origin (.*)/;
+    my $resp = $github->repos->create( $name, $desc, $homepage, 1 );
+
+    if ( $resp->{error} =~ /401 Unauthorized/ ) {
+        die "Authorization failed! Wrong account or api token.\n";
+    }
+
+    if ( my $error = $resp->{error} ) {
+        die $error->[0]{error}, "\n";  # ugh
+    }
+
+    my $private = sprintf 'git@github.com:%s/%s.git', 
+                            $Config{account}, $name;
+
 	DEBUG( "Private URL is [$private]" );
-	die "No private URL! Might be GitHub's fault\n" unless defined $private;
 
 	sleep 5; # github needs a moment to think
 
