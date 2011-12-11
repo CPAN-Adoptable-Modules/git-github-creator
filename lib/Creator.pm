@@ -7,7 +7,7 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.17';
+$VERSION = '0.17_01';
 
 =head1 NAME
 
@@ -147,8 +147,7 @@ __PACKAGE__->run( @ARGV ) unless caller;
 # This is just a quick way to get it indexed in PAUSE as
 # a module.
 
-sub run
-	{
+sub run {
 	my ($class, @argv) = @_;
 
 	{
@@ -179,8 +178,7 @@ sub run
 
 	my $basename = File::Basename::basename( $0 );
 
-	foreach my $dir ( ".", $ENV{HOME} )
-		{
+	foreach my $dir ( ".", $ENV{HOME} ) {
 		my $file = File::Spec->catfile( $dir, ".$basename.ini" );
 		DEBUG( "Trying config file [$file]" );
 		next unless -e $file;
@@ -201,8 +199,7 @@ sub run
         'api-token' => '',
 		);
 
-	foreach my $key ( keys %Defaults )
-		{
+	foreach my $key ( keys %Defaults ) {
 		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
 		DEBUG( "$key is $Config{$key}" );
 		}
@@ -225,12 +222,12 @@ sub run
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
 
-    my $github = Net::GitHub->new(
-        owner => $Config{account},
-        login => $Config{account},
-        token => $Config{'api-token'},
-        repo => $name,
-    );
+	my $github = Net::GitHub->new(
+		owner => $Config{account},
+		login => $Config{account},
+		token => $Config{'api-token'},
+		repo => $name,
+		);
 
 	DEBUG( "Got to GitHub" );
 
@@ -240,18 +237,18 @@ sub run
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Create the repository
 
-    my $resp = $github->repos->create( $name, $desc, $homepage, 1 );
+	my $resp = $github->repos->create( $name, $desc, $homepage, 1 );
 
-    if ( $resp->{error} =~ /401 Unauthorized/ ) {
-        die "Authorization failed! Wrong account or api token.\n";
-    }
+	if ( $resp->{error} =~ /401 Unauthorized/ ) {
+		die "Authorization failed! Wrong account or api token.\n";
+		}
+	
+	if ( my $error = $resp->{error} ) {
+		die $error->[0]{error}, "\n";  # ugh
+		}
 
-    if ( my $error = $resp->{error} ) {
-        die $error->[0]{error}, "\n";  # ugh
-    }
-
-    my $private = sprintf 'git@github.com:%s/%s.git', 
-                            $Config{account}, $name;
+	my $private = sprintf 'git@github.com:%s/%s.git', 
+		                $Config{account}, $name;
 
 	DEBUG( "Private URL is [$private]" );
 
@@ -261,8 +258,7 @@ sub run
 	system( "git push $Config{remote_name} master" );
 	}
 
-sub _meta_yml
-	{
+sub _meta_yml {
 	my ($self, $name) = @_;
 
 	return $self->{meta_yml} ||= do
@@ -290,8 +286,7 @@ sub _meta_yml
 		};
 	}
 
-sub _get_metadata
-	{
+sub _get_metadata {
 	my ($self) = @_;
 
 	return
@@ -301,8 +296,7 @@ sub _get_metadata
 		};
 	}
 
-sub _getopt
-	{
+sub _getopt {
 	my ($self, $argv) = @_;
 
 	require Getopt::Long;

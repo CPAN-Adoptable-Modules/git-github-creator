@@ -1,4 +1,3 @@
-# $Id: Makefile.PL,v 1.4 2004/07/04 17:04:17 comdog Exp $
 use ExtUtils::MakeMaker;
 
 require 5.006;
@@ -19,7 +18,7 @@ WriteMakefile(
 		'Test::More'           => '0',
 		'Test::Output'         => '0',
 		'YAML'                 => '0',
-        'Net::GitHub'          => 0,
+		'Net::GitHub'          => '0',
 		},
 	
 	'PM'           => {
@@ -32,14 +31,14 @@ WriteMakefile(
 		'github_creator' => '$(INST_MAN1DIR)/github_creator.$(MAN1EXT)',
 		},
 
-  (eval { ExtUtils::MakeMaker->VERSION(6.46) }
-    ? (META_MERGE => {
-        resources => {
-          Repository => 'http://github.com/briandfoy/github_creator'
-          }
-        })
-    : ()
-    ),
+	(eval { ExtUtils::MakeMaker->VERSION(6.46) }
+	? (META_MERGE => {
+		resources => {
+		  Repository => 'http://github.com/briandfoy/github_creator'
+		  }
+		})
+	: ()
+	),
 
 	clean  => { FILES    => q|github_creator-*| },
 	);
