@@ -7,7 +7,7 @@ eval "use Test::Manifest 1.21";
 WriteMakefile(
 	'NAME'	       => 'Git::Github::Creator',
 	'ABSTRACT'     => 'Create a Github repository for your Perl module',
-	'VERSION_FROM' => 'lib/Creator.pm',
+	'VERSION_FROM' => 'lib/Git/Github/Creator.pm',
 	'LICENSE'      => 'perl',
 	'AUTHOR'       => 'brian d foy <bdfoy@cpan.org>',
 	
@@ -21,10 +21,6 @@ WriteMakefile(
 		'Net::GitHub'          => '0',
 		},
 	
-	'PM'           => {
-		'lib/Creator.pm' => '$(INST_LIBDIR)/Creator.pm',
-		},
-		
 	'EXE_FILES'    => [ 'github_creator' ],
 
 	'MAN1PODS'     => {
