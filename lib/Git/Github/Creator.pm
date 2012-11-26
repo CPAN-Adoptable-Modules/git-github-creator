@@ -274,24 +274,25 @@ sub _meta_yml {
 		{
 		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 		# Get module info from META.yml
-		if ( ! -e 'META.yml' )
-			{
-			if ( -e 'Makefile.PL' )
-				{
+		if ( ! -e 'META.yml' ) {
+			if ( -e 'Makefile.PL' ) {
 				system "$^X Makefile.PL" unless -e 'Makefile';
 				system "make metafile"   if     -e 'Makefile';
 				}
-		 elsif( -e 'Build.PL' )
-				{
+		 elsif( -e 'Build.PL' ) {
 				system "$^X Build.PL"     unless -e 'Build';
 				system './Build distmeta' if     -e 'Build';
 				}
 			}
 
-		die "No META.yml found\n" unless -e 'META.yml';
-		DEBUG( "META.yml found" );
+		my @files = grep { -e } qw(MYMETA.yml META.yml), glob( "*/META.yml" );
+		DEBUG( "$files[0] found" );
 
-		YAML::LoadFile( 'META.yml' );
+		die "No META.yml found\n" unless -e $files[0];
+		DEBUG( "$files[0] found" );
+
+		require YAML;
+		YAML::LoadFile( $files[0] );
 		};
 	}
 
