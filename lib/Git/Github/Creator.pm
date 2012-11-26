@@ -64,7 +64,7 @@ Example:
 
 	[github]
 	login_page="https://github.com/login"
-    api-token=123456789023455667890234deadbeef
+	api-token=123456789023455667890234deadbeef
 	account=joe@example.com
 	password=foobar
 	remote_name=github
@@ -86,8 +86,19 @@ Your account name, which is probably your email address.
 
 =item api-token
 
-The Github API token linked to your account 
-(should be visible at https://github.com/account)
+The old GitHub API used an access token, but the new v3 API uses
+OAuth. Instead of an old access token, you can create an OAuth
+one by following the example from C<Net::GitHub>:
+
+	my $gh = Net::GitHub::V3->new( login => 'fayland', pass => 'secret' );
+	my $oauth = $gh->oauth;
+	my $o = $oauth->create_authorization( {
+		scopes => ['user', 'public_repo', 'repo', 'gist'], # just ['public_repo']
+		note   => 'test purpose',
+	} );
+	print $o->{token};
+
+If you have a token, you don't need the C<account> or C<password>.
 
 =item password (default = GITHUB_PASS environment var)
 
