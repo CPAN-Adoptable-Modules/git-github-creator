@@ -137,7 +137,7 @@ David Golden and Ricardo SIGNES contributed to the code.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008-2009, brian d foy, All Rights Reserved.
+Copyright (c) 2008-2012, brian d foy, All Rights Reserved.
 
 You may redistribute this under the same terms as Perl itself.
 
