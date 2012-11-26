@@ -205,7 +205,7 @@ sub run {
 		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
 		debug       => 0,
-        'api-token' => '',
+        'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
 	foreach my $key ( keys %Defaults ) {
@@ -231,12 +231,24 @@ sub run {
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
 
-	my $github = Net::GitHub->new(
-		owner => $Config{account},
-		login => $Config{account},
-		token => $Config{'api-token'},
-		repo => $name,
-		);
+	my $credentials = do {
+		if( defined $Config{'api-token'} ) {
+			my $hash = {
+				access_token => $Config{'api-token'}
+				};
+			}
+		elsif( defined $Config{'account'} ) {
+			my $hash = {
+				login => $Config{account},
+				pass  => $Config{password},
+				},
+			}
+		else {
+			my $hash = {},
+			}
+		};
+
+	my $github = Net::GitHub::V3->new( %$credentials );
 
 	DEBUG( "Got to GitHub" );
 
@@ -246,7 +258,12 @@ sub run {
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Create the repository
 
-	my $resp = $github->repos->create( $name, $desc, $homepage, 1 );
+	my $resp = $github->repos->create( {
+		name        => $name,
+		description => $desc,
+		homepage    => $homepage,
+		}
+		);
 
 	if ( $resp->{error} =~ /401 Unauthorized/ ) {
 		die "Authorization failed! Wrong account or api token.\n";
