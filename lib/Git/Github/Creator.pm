@@ -5,7 +5,7 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.17_01';
+$VERSION = '0.17_02';
 
 =head1 NAME
 
@@ -20,7 +20,7 @@ Git::Github::Creator - Create a Github repository from your local repository
 
 	# for a Perl distro, figure it out through META.yml
 	% github_creator
-	
+
 =head1 DESCRIPTION
 
 This is a short script you can run from within an existing git
