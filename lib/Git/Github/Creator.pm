@@ -33,7 +33,8 @@ to find them in META.yml. If the script doesn't find a META.yml, it
 tries to run `make metafile` (or `Build distmeta`) to create one.
 
 From META.yml it gets the module name and abstract, which it uses for
-the Github project name and description.
+the GitHub project name and description. It uses the CPAN Search page
+as the homepage (e.g. http://search.cpan.org/dist/Foo-Bar).
 
 Once it creates the remote repo, it adds a git remote named "origin"
 (unless you change that in the config), then pushes master to it.
