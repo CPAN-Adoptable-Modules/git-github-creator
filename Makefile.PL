@@ -18,7 +18,7 @@ WriteMakefile(
 		'Test::More'           => '0',
 		'Test::Output'         => '0',
 		'YAML'                 => '0',
-		'Net::GitHub'          => '0',
+		'Net::GitHub'          => '0.48',
 		},
 	
 	'EXE_FILES'    => [ 'github_creator' ],
