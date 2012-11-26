@@ -9,7 +9,7 @@ $VERSION = '0.17_02';
 
 =head1 NAME
 
-Git::Github::Creator - Create a Github repository from your local repository
+Git::Github::Creator - Create a GitHub repository from your local repository
 
 =head1 SYNOPSIS
 
@@ -24,8 +24,8 @@ Git::Github::Creator - Create a Github repository from your local repository
 =head1 DESCRIPTION
 
 This is a short script you can run from within an existing git
-repository to create a remote repo on Github using a previously
-created account. This does not create Github accounts (and that
+repository to create a remote repo on GitHub using a previously
+created account. This does not create GitHub accounts (and that
 violates the terms of service).
 
 If the C<--name> and C<--desc> switches are not given, it will try
@@ -38,7 +38,7 @@ the Github project name and description.
 Once it creates the remote repo, it adds a git remote named "origin"
 (unless you change that in the config), then pushes master to it.
 
-If Github sends back the right page, the script ends by printing the
+If GitHub sends back the right page, the script ends by printing the
 private git URL.
 
 =head2 METHODS
@@ -72,7 +72,6 @@ Example:
 =head2 Section [github]
 
 =over 4
-
   
 =item login_page (default = https://github.com/login)
 
@@ -107,7 +106,7 @@ I like to use "github" though.
 
 =item debug (default = 0)
 
-Do everything but don't actually create the Githun repo.
+Do everything but don't actually create the GitHub repo.
 
 =back
 
@@ -115,16 +114,16 @@ Do everything but don't actually create the Githun repo.
 
 =head1 ISSUES
 
-The Github webserver seems to not return the right page every so
+The GitHub webserver seems to not return the right page every so
 often, so things might go wrong. Try again a couple times.
 
 Sometimes there is a delay in the availability of your new repo. This
 script sleeps a couple of seconds then tries to verify that the new repo
-is there. If it can't see it, look at Github first to see if it showed up.
+is there. If it can't see it, look at GitHub first to see if it showed up.
 
 =head1 SOURCE AVAILABILITY
 
-This source is part of a Github project:
+This source is part of a GitHub project:
 
 	git://github.com/briandfoy/github_creator.git
 
