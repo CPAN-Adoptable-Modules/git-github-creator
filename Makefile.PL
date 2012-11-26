@@ -33,5 +33,5 @@ WriteMakefile(
 			}
 		},
 
-	clean  => { FILES    => q|github_creator-*| },
+	clean  => { FILES => q|github_creator-*| },
 	);
