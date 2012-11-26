@@ -1,5 +1,3 @@
-# vim:set noet ts=2 sw=2:
-
 package Git::Github::Creator;
 
 use strict;
