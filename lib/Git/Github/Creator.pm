@@ -143,9 +143,6 @@ You may redistribute this under the same terms as Perl itself.
 
 =cut
 
-use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init( $INFO );
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Should we run?
 
@@ -159,29 +156,10 @@ __PACKAGE__->run( @ARGV ) unless caller;
 sub run {
 	my ($class, @argv) = @_;
 
-	{
-	chomp( my @remotes = `git remote` );
-	my %remotes = map { $_, 1 } @remotes;
-	DEBUG( "Remotes are [@remotes]\n" );
-	die "github remote already exists! Exiting\n"
-		if exists $remotes{'github'};
-	}
-
-	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-	# Okay, we should run, so pull in the modules
-	require Config::IniFiles;
-	require File::Basename;
-	require File::Find;
-	require File::Find::Closures;
-	require File::Spec;
-	require YAML;
-    require Net::GitHub;
-
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Read config
 	my %Config = ();
-
-	{
+	my $debug;
 	my $Section = 'github';
 	my $ini;
 
@@ -198,6 +176,35 @@ sub run {
 		}
 
 	die "Could not read config file!\n" unless defined $ini;
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Setup logging
+	{
+	$debug = $ini->val( 'github', 'debug' ) || 0;
+
+	use Log::Log4perl qw(:easy);
+	Log::Log4perl->easy_init( $debug ? $DEBUG : $INFO );
+	}
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Read config
+	{
+	chomp( my @remotes = `git remote` );
+	my %remotes = map { $_, 1 } @remotes;
+	DEBUG( "Remotes are [@remotes]\n" );
+	die "github remote already exists! Exiting\n"
+		if exists $remotes{'github'};
+	}
+
+	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+	# Okay, we should run, so pull in the modules
+	{
+	require File::Basename;
+	require File::Find;
+	require File::Find::Closures;
+	require File::Spec;
+	require Net::GitHub::V3;
+
 
 	my %Defaults = (
 		login_page  => "https://github.com/login",
@@ -265,11 +272,14 @@ sub run {
 		}
 		);
 
-	if ( $resp->{error} =~ /401 Unauthorized/ ) {
+	{
+	no warnings 'uninitialized';
+	if( $resp->{error} =~ /401 Unauthorized/ ) {
 		die "Authorization failed! Wrong account or api token.\n";
 		}
-	
-	if ( my $error = $resp->{error} ) {
+	}
+
+	if( my $error = $resp->{error} ) {
 		die $error->[0]{error}, "\n";  # ugh
 		}
 
