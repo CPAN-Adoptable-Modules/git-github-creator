@@ -1,4 +1,4 @@
-use ExtUtils::MakeMaker;
+use ExtUtils::MakeMaker 6.46;
 
 require 5.006;
 
@@ -27,14 +27,11 @@ WriteMakefile(
 		'github_creator' => '$(INST_MAN1DIR)/github_creator.$(MAN1EXT)',
 		},
 
-	(eval { ExtUtils::MakeMaker->VERSION(6.46) }
-	? (META_MERGE => {
+	META_MERGE => {
 		resources => {
-		  Repository => 'http://github.com/briandfoy/github_creator'
-		  }
-		})
-	: ()
-	),
+			Repository => 'http://github.com/briandfoy/github_creator'
+			}
+		},
 
 	clean  => { FILES    => q|github_creator-*| },
 	);
