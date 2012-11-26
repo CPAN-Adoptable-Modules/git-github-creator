@@ -1,5 +1,8 @@
 # Changes for github_creator.pl 
 
+0.17_02 - Mon Nov 26 11:40:41 2012
+	* Use Net::GitHub::V3, which can use OAuth
+
 0.17 - Fri Jan  2 21:54:08 2009
 	* I moved most of the script into a modulino.
 
