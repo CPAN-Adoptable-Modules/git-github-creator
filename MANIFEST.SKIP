@@ -25,3 +25,4 @@ github_creator-
 Git-.*
 MYMETA.*
 TO_DO
+\.travis\.yml
