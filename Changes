@@ -1,5 +1,10 @@
 # Changes for github_creator.pl 
 
+0.18 - Mon Aug 26 12:20:59 2013
+	* Use the v3 API (`/anick)
+	* Link to GitHub ToS (Neil Bowers)
+	* Various non-code cleanups
+
 0.17_02 - Mon Nov 26 11:40:41 2012
 	* Use Net::GitHub::V3, which can use OAuth
 
