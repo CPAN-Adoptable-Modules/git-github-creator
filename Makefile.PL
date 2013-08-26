@@ -29,7 +29,11 @@ WriteMakefile(
 
 	META_MERGE => {
 		resources => {
-			Repository => 'http://github.com/briandfoy/github_creator'
+			repository => {
+                type => 'git',
+                url  => 'git://github.com/briandfoy/github_creator.git',
+                web  => 'https://github.com/briandfoy/github_creator',
+                }
 			}
 		},
 

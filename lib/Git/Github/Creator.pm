@@ -25,8 +25,9 @@ Git::Github::Creator - Create a GitHub repository from your local repository
 
 This is a short script you can run from within an existing git
 repository to create a remote repo on GitHub using a previously
-created account. This does not create GitHub accounts (and that
-violates the terms of service).
+created account. This does not create GitHub accounts
+(that would violate the
+L<GitHub terms of service|https://help.github.com/articles/github-terms-of-service#a-account-terms>).
 
 If the C<--name> and C<--desc> switches are not given, it will try
 to find them in META.yml. If the script doesn't find a META.yml, it
