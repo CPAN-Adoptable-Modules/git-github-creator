@@ -213,6 +213,7 @@ sub run {
 		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
 		debug       => 0,
+		lowercase   => 0,
         'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
@@ -225,10 +226,14 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
+    $self->{$_} ||= $Config{$_} for(qw(lowercase));
+
 	my $meta = $self->_get_metadata;
 
 	my $name = $meta->{name};
 	my $desc = $meta->{desc};
+
+    $name = lc $name if($self->{lowercase});
 
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$desc]" );
@@ -342,8 +347,9 @@ sub _getopt {
 	my %opt;
 	Getopt::Long::GetOptionsFromArray(
 		$argv,
-		'desc|d=s' => \$opt{desc},
-		'name|n=s' => \$opt{name},
+		'desc|d=s'     => \$opt{desc},
+		'name|n=s'     => \$opt{name},
+        'lowercase|l'  => \$opt{lowercase},
 		);
 
 	return \%opt
