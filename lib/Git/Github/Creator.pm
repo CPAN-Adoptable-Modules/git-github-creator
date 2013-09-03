@@ -70,6 +70,7 @@ Example:
 	password=foobar
 	remote_name=github
 	debug=1
+	prompt=0
 
 =head2 Section [github]
 
@@ -214,6 +215,7 @@ sub run {
 		remote_name => 'origin',
 		debug       => 0,
 		prefix      => '(Perl) ',
+		prompt      => 0,
 		lowercase   => 0,
         'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
@@ -228,7 +230,7 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
-    $self->{$_} ||= $Config{$_} for(qw(prefix lowercase));
+    $self->{$_} ||= $Config{$_} for(qw(prompt prefix lowercase));
 
 	my $meta = $self->_get_metadata;
 
@@ -242,6 +244,18 @@ sub run {
 
 	my $homepage = "http://search.cpan.org/dist/$name";
 	DEBUG( "Project homepage is [$homepage]" );
+
+    if($self->{prompt}) {
+        require Term::Prompt;
+
+        print  "\n";
+        print  "  name : $name\n";
+        print  "  desc : $desc\n";
+        print  "  home : $homepage\n";
+        print  "remote : $Config{remote_name}\n";
+        print  "\n";
+        exit 0  unless( prompt('y','Continue?','','Y') );
+    }
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
@@ -351,7 +365,8 @@ sub _getopt {
 		$argv,
 		'desc|d=s'     => \$opt{desc},
 		'name|n=s'     => \$opt{name},
-        'lowercase|l'  => \$opt{lowercase},
+		'prompt|p'     => \$opt{prompt},
+		'lowercase|l'  => \$opt{lowercase},
 		);
 
 	return \%opt
