@@ -213,12 +213,14 @@ sub run {
 		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
 		debug       => 0,
+		prefix      => '(Perl) ',
 		lowercase   => 0,
         'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
 	foreach my $key ( keys %Defaults ) {
-		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
+		my $val = $ini->val( $Section, $key );
+		$Config{$key} = defined $val ? $val $Defaults{$key};
 		DEBUG( "$key is $Config{$key}" );
 		}
 	}
@@ -226,7 +228,7 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
-    $self->{$_} ||= $Config{$_} for(qw(lowercase));
+    $self->{$_} ||= $Config{$_} for(qw(prefix lowercase));
 
 	my $meta = $self->_get_metadata;
 
@@ -335,7 +337,7 @@ sub _get_metadata {
 	return
 		{
 		name => $self->{name} || $self->_meta_yml->{name},
-		desc => $self->{desc} || '(Perl) ' . $self->_meta_yml->{abstract},
+		desc => $self->{desc} || $self->{prefix} . $self->_meta_yml->{abstract},
 		};
 	}
 
