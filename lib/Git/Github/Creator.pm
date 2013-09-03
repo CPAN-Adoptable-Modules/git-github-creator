@@ -5,7 +5,7 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.18';
+$VERSION = '0.18_01';
 
 =head1 NAME
 
@@ -114,11 +114,11 @@ Do everything but don't actually create the GitHub repo.
 
 =item lowercase (default = 0)
 
-Use an all lowercase GitHub projects name.
+Use lowercase names for GitHub projects.
 
 =item prefix (default = '(Perl) ')
 
-Provide your own default prefix.
+Set a prefix for project descriptions
 
 =item prompt (default = 0)
 
@@ -152,7 +152,7 @@ This source is part of a GitHub project:
 
 brian d foy, C<< <bdfoy@cpan.org> >>
 
-David Golden and Ricardo SIGNES contributed to the code.
+Barbie, David Golden, and Ricardo SIGNES contributed to the code.
 
 =head1 COPYRIGHT
 
@@ -225,7 +225,6 @@ sub run {
 	require File::Spec;
 	require Net::GitHub::V3;
 
-
 	my %Defaults = (
 		login_page  => "https://github.com/login",
 		account     => $ENV{GITHUB_USER} || '',
@@ -235,10 +234,10 @@ sub run {
 		prefix      => '(Perl) ',
 		prompt      => 0,
 		lowercase   => 0,
-        'api-token' => $ENV{GITHUB_TOKEN} ||'',
+		'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
-        foreach my $key ('homepage', keys %Defaults ) {
+	foreach my $key ('homepage', keys %Defaults ) {
 		my $val = $ini->val( $Section, $key );
 		$Config{$key} = defined $val ? $val : $Defaults{$key};
 		DEBUG( "$key is $Config{$key}" );
@@ -256,7 +255,7 @@ sub run {
 		print  "\n";
 		print  "You don't have an api key, would you like to get one?\n";
 		print  "\n";
-		$self->{oauth} = 1 if( prompt('y','Continue?','','Y') );
+		$self->{oauth} = 1 if prompt( 'y', 'Continue?', '', 'Y' );
 	}
 
 	if($self->{oauth}) {
@@ -273,22 +272,24 @@ sub run {
 	my $homepage = $self->{homepage} || "http://search.cpan.org/dist/$name";
 	DEBUG( "Project homepage is [$homepage]" );
 
-    $name = lc $name if($self->{lowercase});
+	$name = lc $name if($self->{lowercase});
 
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$desc]" );
 
-    if($self->{prompt}) {
-        require Term::Prompt;
+	if($self->{prompt}) {
+		require Term::Prompt;
 
-        print  "\n";
-        print  "  name : $name\n";
-        print  "  desc : $desc\n";
-        print  "  home : $homepage\n";
-        print  "remote : $Config{remote_name}\n";
-        print  "\n";
-        exit 0  unless( prompt('y','Continue?','','Y') );
-    }
+		print <<"HERE";
+
+  name : $name
+  desc : $desc
+  home : $homepage
+remote : $Config{remote_name}
+
+HERE
+		exit 0  unless( prompt('y','Continue?','','Y') );
+	}
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
