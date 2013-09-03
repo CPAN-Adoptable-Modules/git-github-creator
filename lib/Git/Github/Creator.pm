@@ -220,9 +220,9 @@ sub run {
         'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
-	foreach my $key ( keys %Defaults ) {
+        foreach my $key ('homepage', keys %Defaults ) {
 		my $val = $ini->val( $Section, $key );
-		$Config{$key} = defined $val ? $val $Defaults{$key};
+		$Config{$key} = defined $val ? $val : $Defaults{$key};
 		DEBUG( "$key is $Config{$key}" );
 		}
 	}
@@ -230,7 +230,7 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
-    $self->{$_} ||= $Config{$_} for(qw(prompt prefix lowercase));
+    $self->{$_} ||= $Config{$_} for(qw(homepage prompt prefix lowercase));
 
 	my $meta = $self->_get_metadata;
 
@@ -242,7 +242,7 @@ sub run {
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$desc]" );
 
-	my $homepage = "http://search.cpan.org/dist/$name";
+	my $homepage = $self->{homepage} || "http://search.cpan.org/dist/$name";
 	DEBUG( "Project homepage is [$homepage]" );
 
     if($self->{prompt}) {
@@ -365,6 +365,7 @@ sub _getopt {
 		$argv,
 		'desc|d=s'     => \$opt{desc},
 		'name|n=s'     => \$opt{name},
+		'homepage|h=s' => \$opt{homepage},
 		'prompt|p'     => \$opt{prompt},
 		'lowercase|l'  => \$opt{lowercase},
 		);
