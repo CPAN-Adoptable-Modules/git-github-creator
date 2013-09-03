@@ -28,7 +28,7 @@ WriteMakefile(
 		},
 
 	META_MERGE => {
-        'meta-spec' => { version => 2 },
+		'meta-spec' => { version => 2 },
 		resources => {
 			repository => {
 				type => 'git',
