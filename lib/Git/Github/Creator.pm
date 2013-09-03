@@ -70,6 +70,8 @@ Example:
 	password=foobar
 	remote_name=github
 	debug=1
+	prompt=0
+	homepage=http://mywebsite.org
 
 =head2 Section [github]
 
@@ -109,6 +111,23 @@ I like to use "github" though.
 =item debug (default = 0)
 
 Do everything but don't actually create the GitHub repo.
+
+=item lowercase (default = 0)
+
+Use an all lowercase GitHub projects name.
+
+=item prefix (default = '(Perl) ')
+
+Provide your own default prefix.
+
+=item prompt (default = 0)
+
+Display the name, description, homepage and remote name, and prompt to 
+continue, before creating the GitHub repo.
+
+=item homepage (default = http://search.cpan.org/dist/<name>)
+
+Provide your own default homepage.
 
 =back
 
@@ -213,11 +232,15 @@ sub run {
 		password    => $ENV{GITHUB_PASS} || '',
 		remote_name => 'origin',
 		debug       => 0,
+		prefix      => '(Perl) ',
+		prompt      => 0,
+		lowercase   => 0,
         'api-token' => $ENV{GITHUB_TOKEN} ||'',
 		);
 
-	foreach my $key ( keys %Defaults ) {
-		$Config{$key} = $ini->val( $Section, $key ) || $Defaults{$key};
+        foreach my $key ('homepage', keys %Defaults ) {
+		my $val = $ini->val( $Section, $key );
+		$Config{$key} = defined $val ? $val : $Defaults{$key};
 		DEBUG( "$key is $Config{$key}" );
 		}
 	}
@@ -225,16 +248,47 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
+	$self->{$_} ||= $Config{$_} for(qw(homepage prompt prefix lowercase));
+
+	unless($self->{oauth} || $Config{'api-token'}) {
+		require Term::Prompt;
+
+		print  "\n";
+		print  "You don't have an api key, would you like to get one?\n";
+		print  "\n";
+		$self->{oauth} = 1 if( prompt('y','Continue?','','Y') );
+	}
+
+	if($self->{oauth}) {
+		$Config{'api-token'} = $self->_get_token($Config{login},$Config{password});
+		$ini->setval( $Section, 'api-token', $Config{'api-token'} );
+		$ini->RewriteConfig();
+	}
+
 	my $meta = $self->_get_metadata;
 
 	my $name = $meta->{name};
 	my $desc = $meta->{desc};
 
+	my $homepage = $self->{homepage} || "http://search.cpan.org/dist/$name";
+	DEBUG( "Project homepage is [$homepage]" );
+
+    $name = lc $name if($self->{lowercase});
+
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$desc]" );
 
-	my $homepage = "http://search.cpan.org/dist/$name";
-	DEBUG( "Project homepage is [$homepage]" );
+    if($self->{prompt}) {
+        require Term::Prompt;
+
+        print  "\n";
+        print  "  name : $name\n";
+        print  "  desc : $desc\n";
+        print  "  home : $homepage\n";
+        print  "remote : $Config{remote_name}\n";
+        print  "\n";
+        exit 0  unless( prompt('y','Continue?','','Y') );
+    }
 
 	# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 	# Get to Github
@@ -330,7 +384,7 @@ sub _get_metadata {
 	return
 		{
 		name => $self->{name} || $self->_meta_yml->{name},
-		desc => $self->{desc} || '(Perl) ' . $self->_meta_yml->{abstract},
+		desc => $self->{desc} || $self->{prefix} . $self->_meta_yml->{abstract},
 		};
 	}
 
@@ -342,12 +396,35 @@ sub _getopt {
 	my %opt;
 	Getopt::Long::GetOptionsFromArray(
 		$argv,
-		'desc|d=s' => \$opt{desc},
-		'name|n=s' => \$opt{name},
+		'desc|d=s'     => \$opt{desc},
+		'name|n=s'     => \$opt{name},
+		'homepage|h=s' => \$opt{homepage},
+		'oauth|o'      => \$opt{oauth},
+		'prompt|p'     => \$opt{prompt},
+		'lowercase|l'  => \$opt{lowercase},
 		);
 
 	return \%opt
+}
+
+sub _get_token {
+	my ($self,$user,$pass) = @_;
+
+	unless($user && $pass) {
+		die "missing username/password\n";
 	}
+
+	my $gh = Net::GitHub::V3->new( login => "$user", pass => "$pass" );
+
+	my $oauth = $gh->oauth;
+	my $o = $oauth->create_authorization( {
+		scopes => ['user', 'public_repo', 'repo', 'gist'],
+		note   => 'test purpose',
+	} );
+
+	DEBUG( 'token is ' . $o->{token} );
+	return $o->{token};
+}
 
 1;
 
