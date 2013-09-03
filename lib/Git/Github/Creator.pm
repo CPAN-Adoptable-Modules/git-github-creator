@@ -255,13 +255,13 @@ sub run {
 	my $name = $meta->{name};
 	my $desc = $meta->{desc};
 
+	my $homepage = $self->{homepage} || "http://search.cpan.org/dist/$name";
+	DEBUG( "Project homepage is [$homepage]" );
+
     $name = lc $name if($self->{lowercase});
 
 	DEBUG( "Project is [$name]" );
 	DEBUG( "Project description is [$desc]" );
-
-	my $homepage = $self->{homepage} || "http://search.cpan.org/dist/$name";
-	DEBUG( "Project homepage is [$homepage]" );
 
     if($self->{prompt}) {
         require Term::Prompt;
