@@ -71,6 +71,7 @@ Example:
 	remote_name=github
 	debug=1
 	prompt=0
+	homepage=http://mywebsite.org
 
 =head2 Section [github]
 
@@ -110,6 +111,23 @@ I like to use "github" though.
 =item debug (default = 0)
 
 Do everything but don't actually create the GitHub repo.
+
+=item lowercase (default = 0)
+
+Use an all lowercase GitHub projects name.
+
+=item prefix (default = '(Perl) ')
+
+Provide your own default prefix.
+
+=item prompt (default = 0)
+
+Display the name, description, homepage and remote name, and prompt to 
+continue, before creating the GitHub repo.
+
+=item homepage (default = http://search.cpan.org/dist/<name>)
+
+Provide your own default homepage.
 
 =back
 
