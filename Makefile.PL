@@ -15,6 +15,7 @@ WriteMakefile(
 		'Config::IniFiles'     => '0',
 		'File::Find::Closures' => '0',
 		'Log::Log4perl'        => '0',
+		'Term::Prompt'         => '0',
 		'Test::More'           => '0',
 		'Test::Output'         => '0',
 		'YAML'                 => '0',
