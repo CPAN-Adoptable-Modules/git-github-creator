@@ -248,7 +248,22 @@ sub run {
 	my $opts = $class->_getopt(\@argv);
 	my $self = bless $opts => $class;
 
-    $self->{$_} ||= $Config{$_} for(qw(homepage prompt prefix lowercase));
+	$self->{$_} ||= $Config{$_} for(qw(homepage prompt prefix lowercase));
+
+	unless($self->{oauth} || $Config{'api-token'}) {
+		require Term::Prompt;
+
+		print  "\n";
+		print  "You don't have an api key, would you like to get one?\n";
+		print  "\n";
+		$self->{oauth} = 1 if( prompt('y','Continue?','','Y') );
+	}
+
+	if($self->{oauth}) {
+		$Config{'api-token'} = $self->_get_token($Config{login},$Config{password});
+		$ini->setval( $Section, 'api-token', $Config{'api-token'} );
+		$ini->RewriteConfig();
+	}
 
 	my $meta = $self->_get_metadata;
 
@@ -384,12 +399,32 @@ sub _getopt {
 		'desc|d=s'     => \$opt{desc},
 		'name|n=s'     => \$opt{name},
 		'homepage|h=s' => \$opt{homepage},
+		'oauth|o'      => \$opt{oauth},
 		'prompt|p'     => \$opt{prompt},
 		'lowercase|l'  => \$opt{lowercase},
 		);
 
 	return \%opt
+}
+
+sub _get_token {
+	my ($self,$user,$pass) = @_;
+
+	unless($user && $pass) {
+		die "missing username/password\n";
 	}
+
+	my $gh = Net::GitHub::V3->new( login => "$user", pass => "$pass" );
+
+	my $oauth = $gh->oauth;
+	my $o = $oauth->create_authorization( {
+		scopes => ['user', 'public_repo', 'repo', 'gist'],
+		note   => 'test purpose',
+	} );
+
+	DEBUG( 'token is ' . $o->{token} );
+	return $o->{token};
+}
 
 1;
 
