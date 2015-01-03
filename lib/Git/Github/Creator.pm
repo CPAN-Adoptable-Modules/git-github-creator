@@ -156,7 +156,7 @@ Barbie, David Golden, and Ricardo SIGNES contributed to the code.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008-2013, brian d foy, All Rights Reserved.
+Copyright © 2008-2015, brian d foy <bdfoy@cpan.org>. All rights reserved.
 
 You may redistribute this under the same terms as Perl itself.
 
