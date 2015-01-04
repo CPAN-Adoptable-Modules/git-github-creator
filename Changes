@@ -1,4 +1,4 @@
-# Changes for github_creator.pl
+Revision history for Perl module Git::GitHub::Creator
 
 0.18 - Mon Aug 26 12:20:59 2013
 	* Use the v3 API (`/anick)
