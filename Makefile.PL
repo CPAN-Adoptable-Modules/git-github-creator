@@ -1,10 +1,12 @@
 require 5.008;
+
+package Git::Github::Creator;
 use strict;
 use warnings;
 
 use File::Spec::Functions qw(catfile);
 
-my $module    = 'Git::Github::Creator';
+my $module    = __PACKAGE__;
 ( my $dist = $module ) =~ s/::/-/g;
 
 my $github    = 'https://github.com/briandfoy/git-github-creator';
