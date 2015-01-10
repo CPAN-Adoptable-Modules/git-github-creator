@@ -60,7 +60,7 @@ my %WriteMakefile = (
 		'github_creator' => '$(INST_MAN1DIR)/github_creator.$(MAN1EXT)',
 		},
 
-	clean  => { FILES => q|github_creator-*| },
+	clean => { FILES => "$dist-*" },
 	);
 
 sub arguments { \%WriteMakefile }
