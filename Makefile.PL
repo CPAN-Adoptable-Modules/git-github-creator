@@ -13,13 +13,15 @@ my $github    = 'https://github.com/briandfoy/git-github-creator';
 my $main_file = catfile( 'lib', split /::/, "$module.pm" );
 
 my %WriteMakefile = (
-	NAME          => $module,
-	ABSTRACT_FROM => $main_file,
-	VERSION_FROM  => $main_file,
-	LICENSE       => 'perl',
-	AUTHOR        => 'brian d foy <bdfoy@cpan.org>',
+	'MIN_PERL_VERSION' => '5.008',
 
-	EXE_FILES     => [ 'github_creator' ],
+	'NAME'          => $module,
+	'ABSTRACT_FROM' => $main_file,
+	'VERSION_FROM'  => $main_file,
+	'LICENSE'       => 'perl',
+	'AUTHOR'        => 'brian d foy <bdfoy@cpan.org>',
+
+	'EXE_FILES'     => [ 'github_creator' ],
 
 	'CONFIGURE_REQUIRES' => {
 		'ExtUtils::MakeMaker'   => '6.64',
