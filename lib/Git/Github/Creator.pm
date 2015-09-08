@@ -7,6 +7,8 @@ use vars qw($VERSION);
 
 $VERSION = '0.18_01';
 
+=encoding utf8
+
 =head1 NAME
 
 Git::Github::Creator - Create a GitHub repository from your local repository
@@ -76,7 +78,7 @@ Example:
 =head2 Section [github]
 
 =over 4
-  
+
 =item login_page (default = https://github.com/login)
 
 This shouldn't change, but what the hell. It's the only URL
@@ -122,7 +124,7 @@ Set a prefix for project descriptions
 
 =item prompt (default = 0)
 
-Display the name, description, homepage and remote name, and prompt to 
+Display the name, description, homepage and remote name, and prompt to
 continue, before creating the GitHub repo.
 
 =item homepage (default = http://search.cpan.org/dist/<name>)
@@ -339,7 +341,7 @@ HERE
 		die $error->[0]{error}, "\n";  # ugh
 		}
 
-	my $private = sprintf 'git@github.com:%s/%s.git', 
+	my $private = sprintf 'git@github.com:%s/%s.git',
 		                $Config{account}, $name;
 
 	DEBUG( "Private URL is [$private]" );
