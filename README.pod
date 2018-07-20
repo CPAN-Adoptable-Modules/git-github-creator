@@ -13,7 +13,7 @@ for any Perl module.
 
 To read about L<Git::Github::Creator>, look at the embedded documentation 
 in the module itself. Inside the distribution, you can format it 
-with L<perldoc|http://perldoc.perl.org/perldoc.html>:
+with L<perldoc|https://perldoc.perl.orgperldoc.html>:
 
 	% perldoc lib/Git/Github/Creator.pm
 
@@ -24,13 +24,13 @@ name instead of the file location:
 
 You can read the documentation and inspect the meta data on one of the 
 CPAN web interfaces, such as L<CPAN Search|http://search.cpan.org/dist/Git-Github-Creator> or 
-L<MetaCPAN|http://www.metacpan.org/module/Git::Github::Creator>:
+L<MetaCPAN|https://metacpan.org/pod/Git::Github::Creator>:
 
 =over 4
 
 =item *	L<http://search.cpan.org/dist/Git-Github-Creator>
 
-=item *	L<http://www.metacpan.org/module/Git::Github::Creator>
+=item *	L<https://metacpan.org/pod/Git::Github::Creator>
 
 =back
 
