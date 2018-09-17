@@ -5,7 +5,7 @@ use warnings;
 use subs qw(INFO DEBUG);
 use vars qw($VERSION);
 
-$VERSION = '0.18_01';
+$VERSION = '0.180_011';
 
 =encoding utf8
 
