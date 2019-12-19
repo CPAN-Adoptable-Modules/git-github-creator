@@ -22,17 +22,8 @@ name instead of the file location:
 
 	% perldoc Git::Github::Creator
 
-You can read the documentation and inspect the meta data on one of the
-CPAN web interfaces, such as L<CPAN Search|http://search.cpan.org/dist/Git-Github-Creator> or
-L<MetaCPAN|https://metacpan.org/pod/Git::Github::Creator>:
-
-=over 4
-
-=item *	L<http://search.cpan.org/dist/Git-Github-Creator>
-
-=item *	L<https://metacpan.org/pod/Git::Github::Creator>
-
-=back
+You can read the documentation and inspect the meta data on
+L<MetaCPAN|https://metacpan.org/pod/Git::Github::Creator>.
 
 The standard module documentation has example uses in the SYNOPSIS
 section, but you can also look in the I<examples/> directory (if it's
