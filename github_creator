@@ -11,6 +11,8 @@ use Git::Github::Creator;
 
 Git::Github::Creator->run( @ARGV );
 
+=encoding utf8
+
 =head1 NAME
 
 github_creator - Create a Github repository from your local repository
@@ -24,7 +26,7 @@ github_creator - Create a Github repository from your local repository
 
 	# for a Perl distro, figure it out through META.yml
 	% github_creator
-	
+
 =head1 DESCRIPTION
 
 This is a short script you can run from within an existing git
@@ -65,7 +67,7 @@ Example:
 
 =over 4
 
-  
+
 =item login_page (default = https://github.com/login)
 
 This shouldn't change, but what the hell. It's the only URL
